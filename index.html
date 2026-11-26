@@ -57,12 +57,13 @@
       <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-1.5 flex-wrap">
           <div id="devRoleSwitch" class="hidden flex items-center gap-1">
-            <button id="btnRoleAdmin" class="px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950">المدير العام</button>
-            <button id="btnRoleSup" class="px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200 hover:bg-slate-700">مراقب</button>
+            <button id="btnRoleAdmin" class="px-2 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950">المدير</button>
+            <button id="btnRoleGenSup" class="px-2 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200">مراقب عام</button>
+            <button id="btnRoleSup" class="px-2 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200">مراقب</button>
           </div>
           <button id="btnStartTour" class="px-2.5 py-1 rounded-lg font-bold transition bg-sky-600/25 text-sky-200 border border-sky-500/40 hover:bg-sky-600/40 flex items-center gap-1">
             <i data-lucide="compass" class="w-3.5 h-3.5"></i>
-            <span>جولة تعريفية</span>
+            <span>جولة</span>
           </button>
         </div>
         <div class="flex items-center gap-1.5">
@@ -100,11 +101,24 @@
             </button>
             <button id="btnOpenRateModal" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-2.5 py-1.5 text-right transition">
               <div class="text-[10px] text-slate-400">الصرف</div>
-              <div class="text-xs font-extrabold text-amber-400 num">1$=<span id="headerRateVal">14,500</span></div>
+              <div class="text-xs font-extrabold text-amber-400 num">1$=<span id="headerRateVal">100</span></div>
             </button>
           </div>
         </div>
+
         <div class="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="sitePillsContainer"></div>
+
+        <div class="mt-3 flex flex-wrap items-center justify-between gap-2 bg-slate-800/80 border border-slate-700/80 rounded-2xl px-3 py-2">
+          <div class="flex items-center gap-2 text-xs">
+            <i data-lucide="calendar-days" class="w-4 h-4 text-amber-400"></i>
+            <span class="text-slate-300">يوم العمل:</span>
+            <select id="activeDaySelect" class="bg-slate-900 border border-slate-600 text-amber-300 font-extrabold rounded-lg px-2 py-1 text-xs num focus:outline-none"></select>
+          </div>
+          <button id="btnStartNewDay" class="tap-btn bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-xl flex items-center gap-1">
+            <i data-lucide="sunrise" class="w-3.5 h-3.5"></i>
+            <span>+ يوم جديد</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -160,18 +174,35 @@
         </div>
       </section>
 
-      <!-- Supervisor Clean Header Card -->
-      <section id="supervisorSiteBanner" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex items-center justify-between">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot"></span>
-            <h2 id="supSiteName" class="font-extrabold text-base text-slate-900">محضر 1</h2>
+      <!-- Supervisor / General Supervisor Personal Earnings Card -->
+      <section id="supervisorPersonalCard" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot"></span>
+              <h2 id="supCardTitle" class="font-extrabold text-base text-slate-900">حسابي الشخصي</h2>
+            </div>
+            <p id="supCardSub" class="text-xs text-slate-500 mt-0.5">مستحقاتك من الشغل اليوم وما استلمته والصافي</p>
           </div>
-          <p class="text-xs text-slate-500 mt-0.5">واجهة المراقب السريعة • يصل كل إدخال للمدير مباشرة</p>
+          <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3 py-1.5 text-center">
+            <div class="text-[10px] font-bold">نقلات اليوم</div>
+            <div id="supTodayCount" class="text-lg font-black num">0</div>
+          </div>
         </div>
-        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3 py-1.5 text-center">
-          <div class="text-[10px] font-bold">النقلات</div>
-          <div id="supTodayCount" class="text-lg font-black num">0</div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="bg-sky-50 rounded-xl p-2.5 border border-sky-100">
+            <div class="text-[11px] text-sky-700 font-bold">يطلعلك اليوم</div>
+            <div id="supTodayEarn" class="text-sm font-black text-slate-900 mt-0.5 num">0 ل.س</div>
+            <div id="supTotalEarnSub" class="text-[10px] text-sky-600 num">إجمالي: 0</div>
+          </div>
+          <div class="bg-slate-50 rounded-xl p-2.5 border border-slate-200">
+            <div class="text-[11px] text-slate-600 font-bold">المستلم (قبضته)</div>
+            <div id="supReceivedAmt" class="text-sm font-black text-slate-900 mt-0.5 num">0 ل.س</div>
+          </div>
+          <div class="bg-emerald-50 rounded-xl p-2.5 border border-emerald-200">
+            <div class="text-[11px] text-emerald-700 font-bold">الصافي المتبقي لك</div>
+            <div id="supNetRemain" class="text-sm font-black text-emerald-800 mt-0.5 num">0 ل.س</div>
+          </div>
         </div>
       </section>
 
@@ -217,12 +248,11 @@
             </div>
           </div>
 
-          <!-- Active Floor Selector Strip -->
           <div class="bg-slate-50 rounded-2xl p-2.5 border border-slate-200 space-y-2">
             <div class="flex items-center justify-between text-xs">
               <span class="font-extrabold text-slate-700 flex items-center gap-1.5">
                 <i data-lucide="layers" class="w-4 h-4 text-amber-600"></i>
-                <span>الطابق المحدد حالياً:</span>
+                <span>الطابق المحدد:</span>
                 <span id="selectedFloorBadge" class="bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-lg">طابق 1</span>
               </span>
               <button id="btnCustomFloor" class="text-[11px] font-bold text-sky-700 hover:underline">+ طابق آخر</button>
@@ -233,10 +263,13 @@
           <div id="quickLiftGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-extrabold text-slate-900 text-base">سجل النقلات (مع الطابق وقابل للتعديل)</h3>
-            <span id="liftsCountBadge" class="text-xs bg-slate-100 text-slate-600 font-bold px-2.5 py-1 rounded-full num">0 نقلة</span>
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="font-extrabold text-slate-900 text-base">سجل النقلات</h3>
+            <div class="flex items-center gap-2">
+              <select id="liftsFloorFilter" class="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700"></select>
+              <span id="liftsCountBadge" class="text-xs bg-slate-100 text-slate-600 font-bold px-2.5 py-1 rounded-full num">0 نقلة</span>
+            </div>
           </div>
           <div id="liftsList" class="space-y-2"></div>
         </div>
@@ -247,8 +280,8 @@
         <div id="expensesCard" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h3 class="font-extrabold text-slate-900 text-base">المصاريف والمشتريات</h3>
-              <p class="text-xs text-slate-500">1) اختر التصنيف &nbsp;←&nbsp; 2) اضغط اسم البند وأدخل المبلغ ببساطة</p>
+              <h3 class="font-extrabold text-slate-900 text-base">المصاريف والدفعات على العمال</h3>
+              <p class="text-xs text-slate-500">اختر التصنيف ثم اضغط البند؛ ويمكنك ربط أي مصروف بعامل ليُخصم تلقائياً من راتبه</p>
             </div>
             <button id="btnAddCategory" class="tap-btn bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm">
               <i data-lucide="folder-plus" class="w-4 h-4"></i>
@@ -274,7 +307,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div>
               <h3 class="font-extrabold text-slate-900 text-base" id="workersHeaderTitle">فريق العمال وحساب المراقب</h3>
-              <p class="text-xs text-slate-500" id="workersHeaderSub">نسبة % أو أجر ثابت لكل عامل، مع تتبع حساب المراقب والقبض الأسبوعي</p>
+              <p class="text-xs text-slate-500" id="workersHeaderSub">نسبة % أو أجر ثابت لكل عامل، مع خصم تلقائي لأي دفعة سُجّلت على حسابه</p>
             </div>
             <button id="btnAddWorker" class="tap-btn bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5">
               <i data-lucide="user-plus" class="w-4 h-4"></i>
@@ -285,14 +318,35 @@
         </div>
       </section>
 
-      <!-- TAB 4: EXECUTIVE SUMMARY, SITE LIFECYCLE & LIVE MONITOR -->
+      <!-- TAB 4: EXECUTIVE SUMMARY, GENERAL SUPERVISOR PAYROLL & SITE LIFECYCLE -->
       <section id="tab-summary" class="tab-panel hidden space-y-4">
         <div id="supervisorSummaryView" class="hidden bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
-          <h3 class="font-extrabold text-slate-900 text-base">ملخص عمل ورشتي</h3>
+          <h3 class="font-extrabold text-slate-900 text-base">ملخص العمل</h3>
           <div id="supSummaryBody" class="space-y-2 text-sm"></div>
         </div>
 
         <div id="adminSummaryView" class="space-y-4">
+          <div class="bg-gradient-to-l from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-md border border-amber-500/30 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <i data-lucide="eye" class="w-4 h-4 text-amber-400"></i>
+                  <h3 class="font-extrabold text-sm sm:text-base">حساب المراقب العام للمراقبين</h3>
+                </div>
+                <p id="genSupPayDesc" class="text-[11px] text-slate-300 mt-0.5 num">ID: 9019697312 • يراقب كل المحاضر بدون كشف الأرباح</p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button id="btnEditGenSup" class="tap-btn bg-slate-700 hover:bg-slate-600 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl">تحديد نسبته/أجره</button>
+                <button id="btnPayGenSup" class="tap-btn bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl">تسجيل قبض له</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 text-center bg-slate-950/50 rounded-xl p-2.5 border border-slate-700">
+              <div><div class="text-[10px] text-slate-400">المستحق له</div><div id="gsEarned" class="text-xs sm:text-sm font-black text-white num">0 ل.س</div></div>
+              <div><div class="text-[10px] text-slate-400">المستلم</div><div id="gsPaid" class="text-xs sm:text-sm font-black text-sky-400 num">0 ل.س</div></div>
+              <div><div class="text-[10px] text-slate-400">الصافي المتبقي</div><div id="gsRemain" class="text-xs sm:text-sm font-black text-amber-400 num">0 ل.س</div></div>
+            </div>
+          </div>
+
           <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -319,7 +373,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h3 class="font-extrabold text-slate-900 text-base">المحصلة النهائية والحسبة الجزئية</h3>
-                <p class="text-xs text-slate-500">أدخل سعر الصرف واختر الحسبة الكاملة أو الجزئية</p>
+                <p class="text-xs text-slate-500">يدعم العملة الجديدة وأي سعر صرف (مثلاً 100 ليرة للدولار)</p>
               </div>
               <button id="btnDailyReport" class="tap-btn bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
                 <i data-lucide="send" class="w-4 h-4"></i>
@@ -337,8 +391,8 @@
                 <select id="summaryScopeFilter" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold"></select>
               </div>
               <div>
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">سعر صرف الدولار (ل.س)</label>
-                <input id="summaryRateInput" type="number" min="100" step="100" class="w-full bg-white border border-amber-400 rounded-xl px-3 py-2 text-xs font-extrabold num" />
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">سعر صرف الدولار (أي رقم)</label>
+                <input id="summaryRateInput" type="number" min="0.01" step="any" class="w-full bg-white border border-amber-400 rounded-xl px-3 py-2 text-xs font-extrabold num" />
               </div>
             </div>
 
@@ -421,6 +475,7 @@
   <script>
     const OWNER_TG_ID = 5205216077;
     const MANAGER_TG_ID = 8114544290;
+    const GENERAL_SUPERVISOR_ID = 9019697312;
     const ADMIN_IDS = [OWNER_TG_ID, MANAGER_TG_ID];
 
     const firebaseConfig = {
@@ -460,13 +515,18 @@
       }
     } catch (e) {}
 
+    function todayISO() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
     const DEFAULT_PRESETS = [
-      { id: 'p_1', label: 'بلوك 15', icon: '🧱', qty: 45, unit: 'بلوكة', price: 35000, currency: 'SYP', direction: 'تطليع', color: 'amber' },
-      { id: 'p_2', label: 'رمل', icon: '⏳', qty: 500, unit: 'لتر مكعب', price: 40000, currency: 'SYP', direction: 'تطليع', color: 'sky' },
-      { id: 'p_3', label: 'إسمنت', icon: '🏗️', qty: 10, unit: 'كيس', price: 30000, currency: 'SYP', direction: 'تطليع', color: 'slate' },
-      { id: 'p_4', label: 'بحص', icon: '🪨', qty: 500, unit: 'لتر مكعب', price: 40000, currency: 'SYP', direction: 'تطليع', color: 'indigo' },
-      { id: 'p_5', label: 'طينة', icon: '🪣', qty: 300, unit: 'لتر مكعب', price: 25000, currency: 'SYP', direction: 'تطليع', color: 'emerald' },
-      { id: 'p_6', label: 'تنزيل أنقاض', icon: '⬇️', qty: 1, unit: 'نقلة', price: 20000, currency: 'SYP', direction: 'تنزيل', color: 'rose' }
+      { id: 'p_1', label: 'بلوك 15', icon: '🧱', qty: 45, unit: 'بلوكة', price: 350, currency: 'SYP', direction: 'تطليع', color: 'amber' },
+      { id: 'p_2', label: 'رمل', icon: '⏳', qty: 500, unit: 'لتر مكعب', price: 400, currency: 'SYP', direction: 'تطليع', color: 'sky' },
+      { id: 'p_3', label: 'إسمنت', icon: '🏗️', qty: 10, unit: 'كيس', price: 300, currency: 'SYP', direction: 'تطليع', color: 'slate' },
+      { id: 'p_4', label: 'بحص', icon: '🪨', qty: 500, unit: 'لتر مكعب', price: 400, currency: 'SYP', direction: 'تطليع', color: 'indigo' },
+      { id: 'p_5', label: 'طينة', icon: '🪣', qty: 300, unit: 'لتر مكعب', price: 250, currency: 'SYP', direction: 'تطليع', color: 'emerald' },
+      { id: 'p_6', label: 'تنزيل أنقاض', icon: '⬇️', qty: 1, unit: 'نقلة', price: 200, currency: 'SYP', direction: 'تنزيل', color: 'rose' }
     ];
 
     const DEFAULT_CATEGORIES = [
@@ -478,22 +538,35 @@
     function uid(prefix) { return prefix + '_' + Math.random().toString(36).slice(2, 8); }
 
     function makeDefaultSite(id, name, supervisor, ownerName, supervisorTgId = '') {
+      const td = todayISO();
       return {
         id, name, supervisor, ownerName: ownerName || 'غير محدد',
         supervisorTgId: String(supervisorTgId || ''),
         completed: false, completedAt: '',
+        days: [td],
+        currentDay: td,
         presets: JSON.parse(JSON.stringify(DEFAULT_PRESETS)),
         deposits: [], lifts: [],
         categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
         expenses: [],
         workers: [
-          { id: uid('w_sup'), name: supervisor, isSupervisor: true, present: true, payType: 'fixed_day', payValue: 0, currency: 'SYP', daysWorked: 0, paidSyp: 0, paidUsd: 0 }
+          { id: uid('w_sup'), name: supervisor, isSupervisor: true, present: true, payType: 'percent', payValue: 10, currency: 'SYP', daysWorked: 1, paidSyp: 0, paidUsd: 0 }
         ]
       };
     }
 
     const DEFAULT_CLOUD_DATA = {
-      exchangeRate: 14500,
+      exchangeRate: 100,
+      generalSupervisor: {
+        tgId: GENERAL_SUPERVISOR_ID,
+        name: 'المراقب العام',
+        payType: 'percent',
+        payValue: 5,
+        currency: 'SYP',
+        daysWorked: 1,
+        paidSyp: 0,
+        paidUsd: 0
+      },
       auditLog: [],
       sites: [makeDefaultSite('site_1', 'محضر 1', 'أبو أحمد', 'صاحب المحضر 1', '')]
     };
@@ -506,6 +579,8 @@
       activeTab: 'lifts',
       activeFolderId: 'cat_food',
       selectedFloor: 'طابق 1',
+      liftsFloorFilter: 'ALL',
+      dayFilter: 'CURRENT',
       customFloors: [],
       summarySiteFilter: 'ALL',
       summaryScopeFilter: 'ALL',
@@ -530,17 +605,24 @@
 
     function normalizeCloud(data) {
       const d = data || {};
-      d.exchangeRate = Number(d.exchangeRate) || 14500;
+      d.exchangeRate = Number(d.exchangeRate) > 0 ? Number(d.exchangeRate) : 100;
+      d.generalSupervisor = Object.assign({
+        tgId: GENERAL_SUPERVISOR_ID, name: 'المراقب العام', payType: 'percent', payValue: 5, currency: 'SYP', daysWorked: 1, paidSyp: 0, paidUsd: 0
+      }, d.generalSupervisor || {});
       d.auditLog = Array.isArray(d.auditLog) ? d.auditLog : [];
       d.sites = Array.isArray(d.sites) && d.sites.length > 0 ? d.sites : [makeDefaultSite('site_1', 'محضر 1', 'أبو أحمد', 'غير محدد', '')];
+      const td = todayISO();
       d.sites.forEach(s => {
+        s.days = Array.isArray(s.days) && s.days.length ? s.days : [td];
+        s.currentDay = s.currentDay || s.days[s.days.length - 1] || td;
         s.presets = Array.isArray(s.presets) && s.presets.length ? s.presets : JSON.parse(JSON.stringify(DEFAULT_PRESETS));
         s.deposits = Array.isArray(s.deposits) ? s.deposits : [];
         s.lifts = Array.isArray(s.lifts) ? s.lifts : [];
-        s.lifts.forEach(l => { if (!l.floor) l.floor = 'غير محدد'; });
+        s.lifts.forEach(l => { if (!l.floor) l.floor = 'غير محدد'; if (!l.date) l.date = s.currentDay; });
         s.categories = Array.isArray(s.categories) && s.categories.length ? s.categories : JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
         s.categories.forEach(c => { c.items = Array.isArray(c.items) ? c.items : []; });
         s.expenses = Array.isArray(s.expenses) ? s.expenses : [];
+        s.expenses.forEach(e => { if (!e.date) e.date = s.currentDay; });
         s.workers = Array.isArray(s.workers) ? s.workers : [];
         s.ownerName = s.ownerName || 'غير محدد';
         s.supervisor = s.supervisor || 'بدون مراقب';
@@ -580,6 +662,10 @@
         if (id === OWNER_TG_ID) document.getElementById('devRoleSwitch').classList.remove('hidden');
         return;
       }
+      if (id === GENERAL_SUPERVISOR_ID) {
+        ui.role = 'general_supervisor';
+        return;
+      }
       const matchedSite = cloudData.sites.find(s => String(s.supervisorTgId).trim() === String(id));
       if (matchedSite) {
         ui.role = 'supervisor';
@@ -610,11 +696,21 @@
       });
     }
 
-    function toSyp(amount, currency) { return currency === 'USD' ? (Number(amount) || 0) * (Number(cloudData.exchangeRate) || 14500) : (Number(amount) || 0); }
-    function toUsd(amount, currency) { const r = Number(cloudData.exchangeRate) || 14500; return currency === 'USD' ? (Number(amount) || 0) : (r > 0 ? (Number(amount) || 0) / r : 0); }
-    function fmtNum(val) { return Math.round(Number(val) || 0).toLocaleString('en-US'); }
+    function toSyp(amount, currency) {
+      const rate = Number(cloudData.exchangeRate) > 0 ? Number(cloudData.exchangeRate) : 100;
+      return currency === 'USD' ? (Number(amount) || 0) * rate : (Number(amount) || 0);
+    }
+    function toUsd(amount, currency) {
+      const rate = Number(cloudData.exchangeRate) > 0 ? Number(cloudData.exchangeRate) : 100;
+      return currency === 'USD' ? (Number(amount) || 0) : (Number(amount) || 0) / rate;
+    }
+    function fmtNum(val) {
+      const n = Number(val) || 0;
+      const rounded = Math.round(n * 100) / 100;
+      return rounded.toLocaleString('en-US', { maximumFractionDigits: 2 });
+    }
     function fmtSyp(val) { return fmtNum(val) + ' ل.س'; }
-    function fmtUsd(val) { return '$' + (Math.round((Number(val) || 0) * 100) / 100).toLocaleString('en-US'); }
+    function fmtUsd(val) { return '$' + fmtNum(val); }
     function fmtCurr(val, currency) { return currency === 'USD' ? fmtUsd(val) : fmtSyp(val); }
     function nowTimeFull() {
       const d = new Date();
@@ -626,40 +722,73 @@
       return cloudData.sites.find(s => s.id === ui.activeSiteId) || cloudData.sites[0];
     }
 
-    function getAllFloors() {
-      return [...new Set([...DEFAULT_FLOORS, ...ui.customFloors])];
+    function getSelectedDayForSite(site) {
+      if (ui.dayFilter === 'ALL') return 'ALL';
+      if (ui.dayFilter === 'CURRENT') return site.currentDay;
+      return site.days.includes(ui.dayFilter) ? ui.dayFilter : site.currentDay;
     }
+
+    function filterByDay(arr, site) {
+      const d = getSelectedDayForSite(site);
+      if (d === 'ALL') return arr;
+      return arr.filter(item => (item.date || site.currentDay) === d);
+    }
+
+    function getAllFloors() { return [...new Set([...DEFAULT_FLOORS, ...ui.customFloors])]; }
 
     function logAudit(action, details, flag = 'normal') {
       const site = getActiveSite();
-      const actor = ui.role === 'admin' ? (tgUser && Number(tgUser.id) === OWNER_TG_ID ? 'المالك' : 'المدير العام') : `المراقب (${site.supervisor})`;
-      cloudData.auditLog.unshift({ id: uid('aud'), time: nowTimeFull(), siteName: site.name, actor, action, details, flag });
-      if (cloudData.auditLog.length > 150) cloudData.auditLog.pop();
+      const actor = ui.role === 'admin'
+        ? (tgUser && Number(tgUser.id) === OWNER_TG_ID ? 'المالك' : 'المدير العام')
+        : (ui.role === 'general_supervisor' ? 'المراقب العام' : `المراقب (${site.supervisor})`);
+      cloudData.auditLog.unshift({ id: uid('aud'), time: `${site.currentDay} ${nowTimeFull()}`, siteName: site.name, actor, action, details, flag });
+      if (cloudData.auditLog.length > 180) cloudData.auditLog.pop();
     }
 
-    function calcWorkerEarnedSyp(worker, site, liftRevSyp) {
+    function calcWorkerEarnedSyp(worker, site, liftRevSyp, liftCount) {
       const rev = liftRevSyp !== undefined ? liftRevSyp : site.lifts.reduce((s, l) => s + toSyp(l.price, l.currency), 0);
+      const cnt = liftCount !== undefined ? liftCount : site.lifts.length;
       if (worker.payType === 'percent') return worker.present ? (rev * (Number(worker.payValue) || 0) / 100) : 0;
-      if (worker.payType === 'fixed_lift') return worker.present ? (site.lifts.length * toSyp(worker.payValue, worker.currency)) : 0;
+      if (worker.payType === 'fixed_lift') return worker.present ? (cnt * toSyp(worker.payValue, worker.currency)) : 0;
       return (Number(worker.daysWorked) || 0) * toSyp(worker.payValue, worker.currency);
     }
 
-    function calcSiteMetrics(site) {
-      const liftRevSyp = site.lifts.reduce((s, l) => s + toSyp(l.price, l.currency), 0);
+    function calcGeneralSupMetrics() {
+      const gs = cloudData.generalSupervisor;
+      const allRevSyp = cloudData.sites.reduce((sum, s) => sum + s.lifts.reduce((a, l) => a + toSyp(l.price, l.currency), 0), 0);
+      const todayRevSyp = cloudData.sites.reduce((sum, s) => sum + s.lifts.filter(l => (l.date || s.currentDay) === s.currentDay).reduce((a, l) => a + toSyp(l.price, l.currency), 0), 0);
+      const totalEarnedSyp = gs.payType === 'percent' ? (allRevSyp * (Number(gs.payValue) || 0) / 100) : ((Number(gs.daysWorked) || 0) * toSyp(gs.payValue, gs.currency));
+      const todayEarnedSyp = gs.payType === 'percent' ? (todayRevSyp * (Number(gs.payValue) || 0) / 100) : toSyp(gs.payValue, gs.currency);
+      const paidSyp = (Number(gs.paidSyp) || 0) + toSyp(gs.paidUsd || 0, 'USD');
+      return { totalEarnedSyp, todayEarnedSyp, paidSyp, remainSyp: totalEarnedSyp - paidSyp };
+    }
+
+    function calcSiteMetrics(site, useDayFilter = false) {
+      const lifts = useDayFilter ? filterByDay(site.lifts, site) : site.lifts;
+      const expenses = useDayFilter ? filterByDay(site.expenses, site) : site.expenses;
+
+      const liftRevSyp = lifts.reduce((s, l) => s + toSyp(l.price, l.currency), 0);
       const depositsSyp = site.deposits.reduce((s, d) => s + toSyp(d.amount, d.currency), 0);
-      const expensesSyp = site.expenses.reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+      const pureSiteExpensesSyp = expenses.filter(e => !e.linkedWorkerId).reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+      const allExpensesDisplaySyp = expenses.reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+
       let workerEarnedSyp = 0, workerPaidSyp = 0;
       site.workers.forEach(w => {
-        workerEarnedSyp += calcWorkerEarnedSyp(w, site, liftRevSyp);
+        workerEarnedSyp += calcWorkerEarnedSyp(w, site, liftRevSyp, lifts.length);
         workerPaidSyp += (Number(w.paidSyp) || 0) + toSyp(w.paidUsd || 0, 'USD');
       });
-      const totalBlocks = site.lifts.filter(l => l.unit === 'بلوكة').reduce((s, l) => s + (Number(l.qty) || 0), 0);
-      const totalSandLiters = site.lifts.filter(l => l.unit === 'لتر مكعب').reduce((s, l) => s + (Number(l.qty) || 0), 0);
+
+      const totalBlocks = lifts.filter(l => l.unit === 'بلوكة').reduce((s, l) => s + (Number(l.qty) || 0), 0);
+      const totalSandLiters = lifts.filter(l => l.unit === 'لتر مكعب').reduce((s, l) => s + (Number(l.qty) || 0), 0);
       const totalSandM3 = totalSandLiters / 1000;
-      const pettySpentSyp = expensesSyp + workerPaidSyp;
+      const pettySpentSyp = pureSiteExpensesSyp + workerPaidSyp;
       const pettyBalanceSyp = depositsSyp - pettySpentSyp;
-      const netProfitSyp = liftRevSyp - workerEarnedSyp - expensesSyp;
-      return { liftRevSyp, depositsSyp, expensesSyp, workerEarnedSyp, workerPaidSyp, pettySpentSyp, pettyBalanceSyp, netProfitSyp, totalBlocks, totalSandLiters, totalSandM3 };
+      const netProfitSyp = liftRevSyp - workerEarnedSyp - pureSiteExpensesSyp;
+      return {
+        liftRevSyp, depositsSyp, expensesSyp: pureSiteExpensesSyp, allExpensesDisplaySyp,
+        workerEarnedSyp, workerPaidSyp, pettySpentSyp, pettyBalanceSyp, netProfitSyp,
+        totalBlocks, totalSandLiters, totalSandM3, liftsCount: lifts.length
+      };
     }
 
     function showToast(message, onUndo = null) {
@@ -702,6 +831,7 @@
       document.getElementById('bottomNav').classList.remove('hidden');
       renderHeader();
       renderSitePills();
+      renderDayBar();
       renderTopCard();
       renderLiftsTab();
       renderExpensesTab();
@@ -713,12 +843,19 @@
 
     function renderHeader() {
       const isAdmin = ui.role === 'admin';
+      const isGenSup = ui.role === 'general_supervisor';
       const site = getActiveSite();
-      document.getElementById('btnRoleAdmin').className = isAdmin ? 'px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950' : 'px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
-      document.getElementById('btnRoleSup').className = !isAdmin ? 'px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950' : 'px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
-      document.getElementById('roleBadge').textContent = isAdmin ? 'المدير العام' : `مراقب: ${site.supervisor}`;
+
+      document.getElementById('btnRoleAdmin').className = isAdmin ? 'px-2 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950' : 'px-2 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
+      document.getElementById('btnRoleGenSup').className = isGenSup ? 'px-2 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950' : 'px-2 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
+      document.getElementById('btnRoleSup').className = ui.role === 'supervisor' ? 'px-2 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950' : 'px-2 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
+
+      document.getElementById('roleBadge').textContent = isAdmin ? 'المدير العام' : (isGenSup ? 'المراقب العام' : `مراقب: ${site.supervisor}`);
       const activeCount = cloudData.sites.filter(s => !s.completed).length;
-      document.getElementById('headerSubtitle').textContent = isAdmin ? `${activeCount} محاضر نشطة • الأسعار والأرباح خاصة بك` : `${site.name} • إدخال سريع ومباشر للمدير`;
+      document.getElementById('headerSubtitle').textContent = isAdmin
+        ? `${activeCount} محاضر نشطة • الأسعار والأرباح خاصة بك`
+        : (isGenSup ? `مراقبة جميع المحاضر (${activeCount}) • صلاحية مراقب` : `${site.name} • إدخال سريع ومباشر للمدير`);
+
       document.getElementById('adminHeaderControls').classList.toggle('hidden', !isAdmin);
       document.getElementById('headerRateVal').textContent = fmtNum(cloudData.exchangeRate);
       document.getElementById('auditCountBadge').textContent = String(cloudData.auditLog.length);
@@ -741,17 +878,50 @@
       }).join('');
     }
 
+    function renderDayBar() {
+      const site = getActiveSite();
+      const sel = document.getElementById('activeDaySelect');
+      const curVal = ui.dayFilter === 'CURRENT' ? site.currentDay : ui.dayFilter;
+      sel.innerHTML = `<option value="ALL" ${curVal === 'ALL' ? 'selected' : ''}>كل الأيام (${site.days.length})</option>` +
+        [...site.days].reverse().map(d => `<option value="${d}" ${curVal === d ? 'selected' : ''}>${d}${d === site.currentDay ? ' (اليوم النشط)' : ''}</option>`).join('');
+    }
+
     function renderTopCard() {
       const isAdmin = ui.role === 'admin';
       const site = getActiveSite();
       document.getElementById('pettyCashCard').classList.toggle('hidden', !isAdmin);
-      document.getElementById('supervisorSiteBanner').classList.toggle('hidden', isAdmin);
+      document.getElementById('supervisorPersonalCard').classList.toggle('hidden', isAdmin);
+
       if (!isAdmin) {
-        document.getElementById('supSiteName').textContent = site.name;
-        document.getElementById('supTodayCount').textContent = String(site.lifts.length);
+        const todayLifts = site.lifts.filter(l => (l.date || site.currentDay) === site.currentDay);
+        document.getElementById('supTodayCount').textContent = String(todayLifts.length);
+
+        if (ui.role === 'general_supervisor') {
+          const gm = calcGeneralSupMetrics();
+          document.getElementById('supCardTitle').textContent = `حساب المراقب العام (${cloudData.generalSupervisor.name})`;
+          document.getElementById('supCardSub').textContent = `تراقب الآن: ${site.name} (${site.supervisor})`;
+          document.getElementById('supTodayEarn').textContent = fmtSyp(gm.todayEarnedSyp);
+          document.getElementById('supTotalEarnSub').textContent = `إجمالي: ${fmtSyp(gm.totalEarnedSyp)}`;
+          document.getElementById('supReceivedAmt').textContent = fmtSyp(gm.paidSyp);
+          document.getElementById('supNetRemain').textContent = fmtSyp(gm.remainSyp);
+        } else {
+          const supW = site.workers.find(w => w.isSupervisor) || { payType: 'fixed_day', payValue: 0, currency: 'SYP', daysWorked: 0, paidSyp: 0, paidUsd: 0, present: true };
+          const todayRevSyp = todayLifts.reduce((s, l) => s + toSyp(l.price, l.currency), 0);
+          const todayEarn = supW.payType === 'percent' ? (todayRevSyp * (Number(supW.payValue) || 0) / 100)
+            : (supW.payType === 'fixed_lift' ? todayLifts.length * toSyp(supW.payValue, supW.currency) : toSyp(supW.payValue, supW.currency));
+          const totalEarn = calcWorkerEarnedSyp(supW, site);
+          const received = (Number(supW.paidSyp) || 0) + toSyp(supW.paidUsd || 0, 'USD');
+          document.getElementById('supCardTitle').textContent = `حسابي الشخصي — ${site.supervisor}`;
+          document.getElementById('supCardSub').textContent = `${site.name} • اليوم النشط: ${site.currentDay}`;
+          document.getElementById('supTodayEarn').textContent = fmtSyp(todayEarn);
+          document.getElementById('supTotalEarnSub').textContent = `إجمالي: ${fmtSyp(totalEarn)}`;
+          document.getElementById('supReceivedAmt').textContent = fmtSyp(received);
+          document.getElementById('supNetRemain').textContent = fmtSyp(totalEarn - received);
+        }
         return;
       }
-      const m = calcSiteMetrics(site);
+
+      const m = calcSiteMetrics(site, false);
       document.getElementById('activeSiteTitle').textContent = site.name;
       document.getElementById('activeSiteDoneBadge').classList.toggle('hidden', !site.completed);
       document.getElementById('activeSiteStatusDot').className = site.completed ? 'w-2.5 h-2.5 rounded-full bg-emerald-600' : 'w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot';
@@ -769,9 +939,10 @@
     function renderLiftsTab() {
       const isAdmin = ui.role === 'admin';
       const site = getActiveSite();
-      const m = calcSiteMetrics(site);
+      const dayLifts = filterByDay(site.lifts, site);
+      const m = calcSiteMetrics(site, true);
 
-      document.getElementById('statTotalLifts').textContent = fmtNum(site.lifts.length);
+      document.getElementById('statTotalLifts').textContent = fmtNum(dayLifts.length);
       document.getElementById('statTotalBlocks').textContent = fmtNum(m.totalBlocks);
       document.getElementById('statTotalSand').textContent = m.totalSandM3.toFixed(2) + ' م³';
       document.getElementById('statTotalSandLiters').textContent = fmtNum(m.totalSandLiters) + ' لتر مكعب';
@@ -813,17 +984,24 @@
         </button>
       `).join('');
 
-      document.getElementById('liftsCountBadge').textContent = `${site.lifts.length} نقلة`;
+      const usedFloors = [...new Set(dayLifts.map(l => l.floor || 'غير محدد'))];
+      const fSel = document.getElementById('liftsFloorFilter');
+      fSel.innerHTML = `<option value="ALL" ${ui.liftsFloorFilter === 'ALL' ? 'selected' : ''}>كل الطوابق</option>` +
+        usedFloors.map(f => `<option value="${f}" ${ui.liftsFloorFilter === f ? 'selected' : ''}>${f}</option>`).join('');
+
+      const shownLifts = ui.liftsFloorFilter === 'ALL' ? dayLifts : dayLifts.filter(l => (l.floor || 'غير محدد') === ui.liftsFloorFilter);
+      document.getElementById('liftsCountBadge').textContent = `${shownLifts.length} نقلة`;
+
       const list = document.getElementById('liftsList');
-      if (site.lifts.length === 0) {
-        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا توجد نقلات بعد — اختر الطابق واضغط أي صنف أعلاه للبدء</div>`;
+      if (shownLifts.length === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا توجد نقلات في هذا اليوم/الطابق بعد</div>`;
         return;
       }
 
-      list.innerHTML = [...site.lifts].reverse().map((l, idx) => `
+      list.innerHTML = [...shownLifts].reverse().map((l, idx) => `
         <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200/70">
           <div class="flex items-center gap-2.5 min-w-0">
-            <span class="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 num">${site.lifts.length - idx}</span>
+            <span class="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 num">${shownLifts.length - idx}</span>
             <div class="min-w-0">
               <div class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5 flex-wrap">
                 <span>${l.material}</span>
@@ -831,7 +1009,7 @@
                 <span class="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 font-extrabold px-2 py-0.5 rounded-md">${l.floor || 'غير محدد'}</span>
               </div>
               <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
-                <span>${l.direction}</span> • <span class="num">${l.time}</span>
+                <span>${l.direction}</span> • <span class="num">${l.date || ''} ${l.time}</span>
                 ${isAdmin ? `• <span class="font-bold text-emerald-700 num">${fmtCurr(l.price, l.currency)}</span>` : ''}
               </div>
             </div>
@@ -846,10 +1024,12 @@
 
     function renderExpensesTab() {
       const site = getActiveSite();
+      const dayExpenses = filterByDay(site.expenses, site);
       if (!site.categories.some(c => c.id === ui.activeFolderId) && site.categories.length > 0) ui.activeFolderId = site.categories[0].id;
+
       document.getElementById('expenseFoldersGrid').innerHTML = site.categories.map(cat => {
         const active = cat.id === ui.activeFolderId;
-        const catTotalSyp = site.expenses.filter(e => e.categoryId === cat.id).reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+        const catTotalSyp = dayExpenses.filter(e => e.categoryId === cat.id).reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
         return `<button data-folder-id="${cat.id}" class="folder-btn tap-btn shrink-0 px-3.5 py-2.5 rounded-2xl border-2 text-right transition flex items-center gap-2 ${active ? 'bg-slate-900 text-white border-amber-500 shadow' : 'bg-white text-slate-800 border-slate-200 hover:border-amber-300'}"><span class="text-lg">${cat.icon}</span><div><div class="font-extrabold text-xs sm:text-sm">${cat.name}</div><div class="text-[10px] font-bold num ${active ? 'text-amber-400' : 'text-slate-500'}">${fmtSyp(catTotalSyp)}</div></div></button>`;
       }).join('');
 
@@ -864,23 +1044,35 @@
             <button data-add-item-cat="${activeCat.id}" class="add-cat-item-btn tap-btn text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl flex items-center gap-1"><i data-lucide="plus" class="w-3.5 h-3.5"></i><span>بند جديد</span></button>
           </div>
           <div class="flex flex-wrap gap-2">
-            ${activeCat.items.map(itemName => `<button data-pick-cat="${activeCat.id}" data-pick-item="${itemName}" class="pick-exp-chip tap-btn bg-white hover:bg-rose-50 border-2 border-slate-200 hover:border-rose-300 text-slate-900 font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-1.5"><span>${itemName}</span><span class="text-rose-600 text-xs">+</span></button>`).join('')}
+            ${activeCat.items.map((itemName, i) => `
+              <div class="inline-flex items-center bg-white border-2 border-slate-200 hover:border-rose-300 rounded-xl shadow-xs overflow-hidden">
+                <button data-pick-cat="${activeCat.id}" data-pick-item="${itemName}" class="pick-exp-chip tap-btn hover:bg-rose-50 text-slate-900 font-extrabold text-xs sm:text-sm px-3.5 py-2 flex items-center gap-1.5">
+                  <span>${itemName}</span>
+                  <span class="text-rose-600 text-xs">+</span>
+                </button>
+                <button data-del-chip-cat="${activeCat.id}" data-del-chip-idx="${i}" class="del-chip-btn px-2 py-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border-r border-slate-200 text-xs font-bold" title="حذف البند">✕</button>
+              </div>
+            `).join('')}
           </div>
         `;
       }
 
-      const totalExpSyp = site.expenses.reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+      const totalExpSyp = dayExpenses.reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
       document.getElementById('expensesTotalBadge').textContent = fmtSyp(totalExpSyp);
       const list = document.getElementById('expensesList');
-      if (site.expenses.length === 0) {
-        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا توجد مصاريف مسجّلة بعد</div>`;
+      if (dayExpenses.length === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا توجد مصاريف مسجّلة في هذا اليوم</div>`;
         return;
       }
-      list.innerHTML = [...site.expenses].reverse().map(e => `
+      list.innerHTML = [...dayExpenses].reverse().map(e => `
         <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200/70">
           <div>
-            <div class="font-extrabold text-sm text-slate-900">${e.itemName} <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold">${e.categoryName}</span></div>
-            <div class="text-[11px] text-slate-500 mt-0.5"><span class="num">${e.time}</span> • <strong class="text-rose-600 num">${fmtCurr(e.amount, e.currency)}</strong></div>
+            <div class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5 flex-wrap">
+              <span>${e.itemName}</span>
+              <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold">${e.categoryName}</span>
+              ${e.linkedWorkerName ? `<span class="text-[10px] bg-sky-100 text-sky-800 border border-sky-200 px-2 py-0.5 rounded-md font-extrabold">خصم من راتب: ${e.linkedWorkerName}</span>` : ''}
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5"><span class="num">${e.date || ''} ${e.time}</span> • <strong class="text-rose-600 num">${fmtCurr(e.amount, e.currency)}</strong></div>
           </div>
           <button data-del-exp="${e.id}" class="del-exp-btn p-2 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-slate-500 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         </div>
@@ -890,9 +1082,9 @@
     function renderWorkersTab() {
       const isAdmin = ui.role === 'admin';
       const site = getActiveSite();
-      const m = calcSiteMetrics(site);
+      const m = calcSiteMetrics(site, false);
       document.getElementById('workersHeaderTitle').textContent = isAdmin ? 'فريق العمال وحساب المراقب' : 'حضور العمال اليوم';
-      document.getElementById('workersHeaderSub').textContent = isAdmin ? 'يشمل العمال والمراقب المستلم لتتبع ما دُفع له ونسبته أو أجره' : 'حدّد العمال الحاضرين اليوم في الورشة بضغطة زر';
+      document.getElementById('workersHeaderSub').textContent = isAdmin ? 'نسبة % أو أجر ثابت لكل عامل، مع خصم تلقائي لأي دفعة على حسابه' : 'حدّد العمال الحاضرين اليوم في الورشة بضغطة زر';
 
       const list = document.getElementById('workersList');
       if (site.workers.length === 0) {
@@ -900,7 +1092,7 @@
         return;
       }
       list.innerHTML = site.workers.map(w => {
-        const earnedSyp = calcWorkerEarnedSyp(w, site, m.liftRevSyp);
+        const earnedSyp = calcWorkerEarnedSyp(w, site, m.liftRevSyp, site.lifts.length);
         const paidSyp = (Number(w.paidSyp) || 0) + toSyp(w.paidUsd || 0, 'USD');
         const remainSyp = earnedSyp - paidSyp;
         let payDesc = w.payType === 'percent' ? `نسبة ${w.payValue}%` : (w.payType === 'fixed_lift' ? `${fmtCurr(w.payValue, w.currency)} / نقلة` : `${fmtCurr(w.payValue, w.currency)} / يوم`);
@@ -919,7 +1111,7 @@
             ${isAdmin ? `
               <div class="grid grid-cols-3 gap-2 text-center bg-white rounded-xl p-2 border border-slate-200/70">
                 <div><div class="text-[10px] text-slate-500">المستحق</div><div class="text-xs font-extrabold text-slate-900 num">${fmtSyp(earnedSyp)}</div></div>
-                <div><div class="text-[10px] text-slate-500">المدفوع له</div><div class="text-xs font-extrabold text-sky-700 num">${fmtSyp(paidSyp)}</div></div>
+                <div><div class="text-[10px] text-slate-500">المدفوع / مسحوب</div><div class="text-xs font-extrabold text-sky-700 num">${fmtSyp(paidSyp)}</div></div>
                 <div><div class="text-[10px] text-slate-500">المتبقي له</div><div class="text-xs font-black num ${remainSyp > 0 ? 'text-amber-600' : 'text-emerald-600'}">${fmtSyp(remainSyp)}</div></div>
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
@@ -937,25 +1129,41 @@
       const isAdmin = ui.role === 'admin';
       document.getElementById('supervisorSummaryView').classList.toggle('hidden', isAdmin);
       document.getElementById('adminSummaryView').classList.toggle('hidden', !isAdmin);
+
       if (!isAdmin) {
         const site = getActiveSite();
-        const m = calcSiteMetrics(site);
+        const m = calcSiteMetrics(site, true);
         const presentCount = site.workers.filter(w => w.present).length;
+        const isGenSup = ui.role === 'general_supervisor';
         document.getElementById('supSummaryBody').innerHTML = `
           <div class="grid grid-cols-2 gap-2.5">
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">إجمالي النقلات</div><div class="text-xl font-black text-slate-900 num">${site.lifts.length}</div></div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">نقلات (${getSelectedDayForSite(site) === 'ALL' ? 'كل الأيام' : getSelectedDayForSite(site)})</div><div class="text-xl font-black text-slate-900 num">${m.liftsCount}</div></div>
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">العمال الحاضرون</div><div class="text-xl font-black text-emerald-700 num">${presentCount} / ${site.workers.length}</div></div>
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">مجموع البلوك</div><div class="text-lg font-black text-amber-600 num">${fmtNum(m.totalBlocks)}</div></div>
-            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">مصاريفك المسجّلة</div><div class="text-lg font-black text-rose-600 num">${fmtSyp(m.expensesSyp)}</div></div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">المصاريف المسجّلة</div><div class="text-lg font-black text-rose-600 num">${fmtSyp(m.allExpensesDisplaySyp)}</div></div>
           </div>
+          ${isGenSup ? `
+            <div class="pt-3 border-t border-slate-200 space-y-2">
+              <div class="text-xs font-extrabold text-slate-700">ملخص سريع لجميع المحاضر (صلاحية المراقب العام):</div>
+              ${cloudData.sites.map(s => `<div class="bg-slate-50 p-2.5 rounded-xl border flex justify-between text-xs font-bold"><span>${s.name} (${s.supervisor})</span><span class="num text-amber-700">${s.lifts.length} نقلة</span></div>`).join('')}
+            </div>
+          ` : ''}
         `;
         return;
       }
 
+      const gs = cloudData.generalSupervisor;
+      const gm = calcGeneralSupMetrics();
+      const gsPayStr = gs.payType === 'percent' ? `نسبة ${gs.payValue}% من كل المحاضر` : `أجر يومي ${fmtCurr(gs.payValue, gs.currency)} × ${gs.daysWorked} أيام`;
+      document.getElementById('genSupPayDesc').textContent = `ID: ${GENERAL_SUPERVISOR_ID} • ${gsPayStr}`;
+      document.getElementById('gsEarned').textContent = fmtSyp(gm.totalEarnedSyp);
+      document.getElementById('gsPaid').textContent = fmtSyp(gm.paidSyp);
+      document.getElementById('gsRemain').textContent = fmtSyp(gm.remainSyp);
+
       const activeSites = cloudData.sites.filter(s => !s.completed);
       const completedSites = cloudData.sites.filter(s => s.completed);
       const renderSiteCard = (s) => {
-        const m = calcSiteMetrics(s);
+        const m = calcSiteMetrics(s, false);
         const selected = s.id === ui.activeSiteId;
         return `
           <div class="rounded-2xl p-3 border-2 space-y-2.5 transition ${selected ? 'bg-amber-50/60 border-amber-500' : (s.completed ? 'bg-emerald-50/40 border-emerald-200' : 'bg-slate-50 border-slate-200')}">
@@ -989,13 +1197,13 @@
         <option value="ALL" ${ui.summaryScopeFilter === 'ALL' ? 'selected' : ''}>المحصلة الشاملة (الكل)</option>
         <option value="LIFTS" ${ui.summaryScopeFilter === 'LIFTS' ? 'selected' : ''}>حسبة جزئية: النقلات فقط</option>
         <option value="WORKERS" ${ui.summaryScopeFilter === 'WORKERS' ? 'selected' : ''}>حسبة جزئية: العمال فقط</option>
-        <option value="EXPENSES" ${ui.summaryScopeFilter === 'EXPENSES' ? 'selected' : ''}>حسبة جزئية: كل المصاريف</option>
+        <option value="EXPENSES" ${ui.summaryScopeFilter === 'EXPENSES' ? 'selected' : ''}>حسبة جزئية: مصاريف الورش</option>
         ${[...catNames].map(cn => `<option value="CAT:${cn}" ${ui.summaryScopeFilter === 'CAT:' + cn ? 'selected' : ''}>حسبة جزئية: تصنيف (${cn})</option>`).join('')}
       `;
 
       let totalLiftRev = 0, totalWorkers = 0, totalExpenses = 0, totalPartialCat = 0;
       targetSites.forEach(s => {
-        const m = calcSiteMetrics(s);
+        const m = calcSiteMetrics(s, false);
         totalLiftRev += m.liftRevSyp; totalWorkers += m.workerEarnedSyp; totalExpenses += m.expensesSyp;
         if (ui.summaryScopeFilter.startsWith('CAT:')) {
           const tc = ui.summaryScopeFilter.slice(4);
@@ -1007,14 +1215,14 @@
       const kpiGrid = document.getElementById('summaryKpiGrid');
       if (ui.summaryScopeFilter !== 'ALL') {
         const val = ui.summaryScopeFilter.startsWith('CAT:') ? totalPartialCat : ui.summaryScopeFilter === 'LIFTS' ? totalLiftRev : ui.summaryScopeFilter === 'WORKERS' ? totalWorkers : totalExpenses;
-        const lbl = ui.summaryScopeFilter.startsWith('CAT:') ? `الحسبة الجزئية لتصنيف: ${ui.summaryScopeFilter.slice(4)}` : ui.summaryScopeFilter === 'LIFTS' ? 'الحسبة الجزئية: إجمالي النقلات' : ui.summaryScopeFilter === 'WORKERS' ? 'الحسبة الجزئية: إجمالي العمال' : 'الحسبة الجزئية: إجمالي المصاريف';
+        const lbl = ui.summaryScopeFilter.startsWith('CAT:') ? `الحسبة الجزئية لتصنيف: ${ui.summaryScopeFilter.slice(4)}` : ui.summaryScopeFilter === 'LIFTS' ? 'الحسبة الجزئية: إجمالي النقلات' : ui.summaryScopeFilter === 'WORKERS' ? 'الحسبة الجزئية: إجمالي العمال' : 'الحسبة الجزئية: مصاريف الورش';
         kpiGrid.innerHTML = `<div class="col-span-2 sm:col-span-4 bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-center"><div class="text-xs font-bold text-amber-800">${lbl}</div><div class="text-2xl font-black text-slate-900 mt-1 num">${fmtSyp(val)}</div><div class="text-sm font-extrabold text-amber-700 num">${fmtUsd(toUsd(val, 'SYP'))}</div></div>`;
       } else {
         kpiGrid.innerHTML = `
           <div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-200"><div class="text-[11px] text-emerald-700 font-bold">إجمالي قيمة النقلات</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalLiftRev)}</div><div class="text-[11px] text-emerald-600 font-bold num">${fmtUsd(toUsd(totalLiftRev, 'SYP'))}</div></div>
           <div class="bg-sky-50 rounded-2xl p-3 border border-sky-200"><div class="text-[11px] text-sky-700 font-bold">حصة وأجور العمال</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalWorkers)}</div><div class="text-[11px] text-sky-600 font-bold num">${fmtUsd(toUsd(totalWorkers, 'SYP'))}</div></div>
-          <div class="bg-rose-50 rounded-2xl p-3 border border-rose-200"><div class="text-[11px] text-rose-700 font-bold">المصاريف (مولدة/أكل/صيانة)</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalExpenses)}</div><div class="text-[11px] text-rose-600 font-bold num">${fmtUsd(toUsd(totalExpenses, 'SYP'))}</div></div>
-          <div class="bg-slate-900 text-white rounded-2xl p-3 border border-amber-500/50"><div class="text-[11px] text-amber-400 font-bold">المحصلة الصافية لصاحب الشغل</div><div class="text-sm sm:text-base font-black mt-0.5 num">${fmtSyp(netProfit)}</div><div class="text-[11px] text-amber-300 font-bold num">${fmtUsd(toUsd(netProfit, 'SYP'))}</div></div>
+          <div class="bg-rose-50 rounded-2xl p-3 border border-rose-200"><div class="text-[11px] text-rose-700 font-bold">مصاريف الورش</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalExpenses)}</div><div class="text-[11px] text-rose-600 font-bold num">${fmtUsd(toUsd(totalExpenses, 'SYP'))}</div></div>
+          <div class="bg-slate-900 text-white rounded-2xl p-3 border border-amber-500/50"><div class="text-[11px] text-amber-400 font-bold">المحصلة الصافية</div><div class="text-sm sm:text-base font-black mt-0.5 num">${fmtSyp(netProfit)}</div><div class="text-[11px] text-amber-300 font-bold num">${fmtUsd(toUsd(netProfit, 'SYP'))}</div></div>
         `;
       }
       renderChart(totalLiftRev, totalWorkers, totalExpenses, Math.max(0, netProfit));
@@ -1041,24 +1249,122 @@
       });
     }
 
-    function openCustomFloorModal() {
-      openModal('إضافة طابق مخصص', `
-        <form id="customFloorForm" class="space-y-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">اسم أو رقم الطابق (مثلاً: طابق 12 أو قبو 2)</label>
-            <input name="floorName" required placeholder="مثال: طابق 12" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold" />
-          </div>
-          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">تحديد هذا الطابق</button>
+    function openStartNewDayModal() {
+      const site = getActiveSite();
+      openModal(`بدء يوم عمل جديد — ${site.name}`, `
+        <form id="newDayForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">تاريخ اليوم الجديد</label><input name="dayDate" type="date" required value="${todayISO()}" class="w-full border-2 border-amber-400 rounded-xl px-3 py-2 font-black num" /></div>
+          <label class="flex items-center gap-2 text-xs font-bold text-slate-700 bg-slate-50 p-2.5 rounded-xl border"><input name="incDays" type="checkbox" checked class="w-4 h-4 accent-amber-500" /><span>إضافة +1 يوم عمل تلقائياً للعمال الحاضرين والمراقب العام</span></label>
+          <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl">بدء اليوم الآن</button>
         </form>
       `);
-      document.getElementById('customFloorForm').addEventListener('submit', e => {
+      document.getElementById('newDayForm').addEventListener('submit', e => {
         e.preventDefault();
-        const fl = String(new FormData(e.target).get('floorName') || '').trim();
-        if (fl) {
-          if (!ui.customFloors.includes(fl)) ui.customFloors.push(fl);
-          ui.selectedFloor = fl;
-          closeModal(); renderAll(false); showToast(`تم تحديد ${fl}`);
+        const fd = new FormData(e.target);
+        const dt = String(fd.get('dayDate') || todayISO());
+        if (!site.days.includes(dt)) site.days.push(dt);
+        site.currentDay = dt; ui.dayFilter = dt;
+        if (fd.get('incDays')) {
+          site.workers.forEach(w => { if (w.present) w.daysWorked = (Number(w.daysWorked) || 0) + 1; });
+          cloudData.generalSupervisor.daysWorked = (Number(cloudData.generalSupervisor.daysWorked) || 0) + 1;
         }
+        logAudit('بداية يوم جديد', `تم فتح يوم العمل بتاريخ ${dt} في ${site.name}`, 'normal');
+        closeModal(); renderAll(); showToast(`بدأ يوم العمل الجديد: ${dt}`);
+      });
+    }
+
+    function openEditGenSupModal() {
+      const gs = cloudData.generalSupervisor;
+      openModal('إعدادات حساب المراقب العام', `
+        <form id="editGsForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">الاسم</label><input name="name" required value="${gs.name}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">طريقة الحساب</label><select name="payType" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="percent" ${gs.payType === 'percent' ? 'selected' : ''}>نسبة مئوية (%) من شغل جميع المحاضر</option><option value="fixed_day" ${gs.payType === 'fixed_day' ? 'selected' : ''}>أجر يومي ثابت</option></select></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">القيمة (% أو مبلغ)</label><input name="payValue" type="number" step="any" required value="${gs.payValue}" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP" ${gs.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${gs.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div>
+          </div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">أيام العمل</label><input name="daysWorked" type="number" min="0" required value="${gs.daysWorked}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ</button>
+        </form>
+      `);
+      document.getElementById('editGsForm').addEventListener('submit', e => {
+        e.preventDefault(); const fd = new FormData(e.target);
+        gs.name = fd.get('name'); gs.payType = fd.get('payType'); gs.payValue = Number(fd.get('payValue')) || 0;
+        gs.currency = fd.get('currency'); gs.daysWorked = Number(fd.get('daysWorked')) || 0;
+        closeModal(); renderAll(); showToast('تم تحديث حساب المراقب العام');
+      });
+    }
+
+    function openPayGenSupModal() {
+      const gs = cloudData.generalSupervisor;
+      openModal(`تسجيل قبض للمراقب العام (${gs.name})`, `
+        <form id="payGsForm" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">تأكيد الدفعة</button>
+        </form>
+      `);
+      document.getElementById('payGsForm').addEventListener('submit', e => {
+        e.preventDefault(); const fd = new FormData(e.target); const amt = Number(fd.get('amount')) || 0; const cur = fd.get('currency');
+        if (cur === 'USD') gs.paidUsd = (gs.paidUsd || 0) + amt; else gs.paidSyp = (gs.paidSyp || 0) + amt;
+        logAudit('تسجيل قبض للمراقب العام', `${gs.name} — ${fmtCurr(amt, cur)}`, 'normal');
+        closeModal(); renderAll(); showToast('تم تسجيل الدفعة');
+      });
+    }
+
+    function openQuickExpenseModal(catId, itemName) {
+      const site = getActiveSite();
+      const cat = site.categories.find(c => c.id === catId);
+      if (!cat) return;
+      openModal(`تسجيل مصروف: ${itemName}`, `
+        <form id="qExpForm" class="space-y-3">
+          <div class="text-xs text-slate-500">التصنيف: <strong>${cat.icon} ${cat.name}</strong> • التاريخ: <strong class="num">${site.currentDay}</strong></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ المدفوع</label><input name="amount" type="number" step="any" required autofocus placeholder="مثال: 650" class="w-full border-2 border-rose-300 rounded-xl px-3 py-2.5 text-base font-black num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
+          </div>
+          <div class="bg-sky-50 border border-sky-200 rounded-xl p-2.5">
+            <label class="block text-xs font-extrabold text-sky-900 mb-1">هل هي دفعة على حساب أحد العمال (تُخصم من راتبه)؟</label>
+            <select name="linkedWorkerId" class="w-full bg-white border border-sky-300 rounded-lg px-2.5 py-2 text-xs font-bold">
+              <option value="">لا — مصروف عام على الورشة</option>
+              ${site.workers.map(w => `<option value="${w.id}">نعم — خصم من راتب: ${w.name}</option>`).join('')}
+            </select>
+          </div>
+          <button type="submit" class="w-full bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">حفظ المصروف</button>
+        </form>
+      `);
+      document.getElementById('qExpForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const amount = Number(fd.get('amount')) || 0;
+        const currency = fd.get('currency');
+        const linkedWorkerId = String(fd.get('linkedWorkerId') || '');
+        let linkedWorkerName = '';
+        if (linkedWorkerId) {
+          const w = site.workers.find(x => x.id === linkedWorkerId);
+          if (w) {
+            linkedWorkerName = w.name;
+            if (currency === 'USD') w.paidUsd = (Number(w.paidUsd) || 0) + amount;
+            else w.paidSyp = (Number(w.paidSyp) || 0) + amount;
+          }
+        }
+        site.expenses.push({
+          id: uid('ex'), categoryId: cat.id, categoryName: cat.name, itemName, amount, currency,
+          linkedWorkerId, linkedWorkerName, date: site.currentDay, time: nowTimeFull()
+        });
+        logAudit(linkedWorkerName ? 'مصروف مخصوم من عامل' : 'تسجيل مصروف', `${itemName} — ${fmtCurr(amount, currency)}${linkedWorkerName ? ` (خُصم من: ${linkedWorkerName})` : ''}`, 'normal');
+        closeModal(); renderAll();
+        showToast(linkedWorkerName ? `تم تسجيل ${itemName} وخصمها من راتب ${linkedWorkerName}` : `تم تسجيل ${itemName}`);
+      });
+    }
+
+    function openCustomFloorModal() {
+      openModal('إضافة طابق مخصص', `<form id="customFloorForm" class="space-y-3"><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم أو رقم الطابق</label><input name="floorName" required placeholder="مثال: طابق 12" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold" /></div><button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">تحديد هذا الطابق</button></form>`);
+      document.getElementById('customFloorForm').addEventListener('submit', e => {
+        e.preventDefault(); const fl = String(new FormData(e.target).get('floorName') || '').trim();
+        if (fl) { if (!ui.customFloors.includes(fl)) ui.customFloors.push(fl); ui.selectedFloor = fl; closeModal(); renderAll(false); showToast(`تم تحديد ${fl}`); }
       });
     }
 
@@ -1069,53 +1375,39 @@
           <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المحضر</label><input name="name" required value="${site.name}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
           <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم صاحب المحضر</label><input name="ownerName" required value="${site.ownerName}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
           <div class="bg-amber-50/70 border border-amber-200 rounded-2xl p-3 space-y-2.5">
-            <div class="text-xs font-extrabold text-amber-900">بيانات المراقب المستلم (لتبديله اكتب اسم ورقم المراقب الجديد):</div>
+            <div class="text-xs font-extrabold text-amber-900">بيانات المراقب المستلم:</div>
             <div><label class="block text-[11px] font-bold text-slate-600 mb-1">اسم المراقب</label><input name="supervisor" required value="${site.supervisor}" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
             <div><label class="block text-[11px] font-bold text-slate-600 mb-1">رقم Telegram ID للمراقب</label><input name="supervisorTgId" value="${site.supervisorTgId}" placeholder="مثال: 5123456789" class="w-full bg-white border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div>
-            ${site.supervisorTgId ? `
-              <button type="button" id="btnRemoveSupervisor" class="w-full bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 font-extrabold py-2 rounded-xl text-xs">
-                إزالة المراقب الحالي وفصل صلاحيته فوراً
-              </button>
-            ` : ''}
+            ${site.supervisorTgId ? `<button type="button" id="btnRemoveSupervisor" class="w-full bg-rose-50 hover:bg-rose-100 border border-rose-300 text-rose-700 font-extrabold py-2 rounded-xl text-xs">إزالة المراقب الحالي وفصل صلاحيته فوراً</button>` : ''}
           </div>
-          <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ التعديلات</button>
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ التعديلات</button>
         </form>
       `);
       const remBtn = document.getElementById('btnRemoveSupervisor');
       if (remBtn) {
         remBtn.addEventListener('click', () => {
           const oldSup = site.supervisor;
-          site.supervisorTgId = '';
-          site.supervisor = 'بدون مراقب حالياً';
+          site.supervisorTgId = ''; site.supervisor = 'بدون مراقب حالياً';
           logAudit('إزالة مراقب وفصل صلاحيته', `تم فصل ${oldSup} عن ${site.name}`, 'delete');
-          closeModal(); renderAll(); showToast(`تم فصل المراقب (${oldSup}) فوراً عن ${site.name}`);
+          closeModal(); renderAll(); showToast(`تم فصل المراقب (${oldSup}) فوراً`);
         });
       }
       document.getElementById('editSiteMetaForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const oldSup = site.supervisor;
-        const oldId = site.supervisorTgId;
-        site.name = fd.get('name');
-        site.ownerName = fd.get('ownerName');
-        site.supervisor = fd.get('supervisor');
-        site.supervisorTgId = String(fd.get('supervisorTgId') || '').trim();
+        e.preventDefault(); const fd = new FormData(e.target);
+        site.name = fd.get('name'); site.ownerName = fd.get('ownerName');
+        site.supervisor = fd.get('supervisor'); site.supervisorTgId = String(fd.get('supervisorTgId') || '').trim();
         const supW = site.workers.find(w => w.isSupervisor);
         if (supW) supW.name = site.supervisor;
-        if (oldId !== site.supervisorTgId || oldSup !== site.supervisor) {
-          logAudit('تبديل / تحديث مراقب المحضر', `${site.name}: ${oldSup} ← ${site.supervisor}`, 'edit');
-        } else {
-          logAudit('تعديل بيانات محضر', `${site.name} | الصاحب: ${site.ownerName}`, 'edit');
-        }
-        closeModal(); renderAll(); showToast('تم حفظ بيانات المحضر والمراقب');
+        logAudit('تحديث بيانات محضر/مراقب', `${site.name} | ${site.supervisor}`, 'edit');
+        closeModal(); renderAll(); showToast('تم الحفظ');
       });
     }
 
     function openAdminSearchModal() {
       openModal('بحث في السجلات (النقلات والطوابق والدفع)', `
         <div class="space-y-3">
-          <input id="adminSearchInput" type="text" placeholder="ابحث بمادة، طابق (مثلاً طابق 4)، مصروف، محضر..." class="w-full border-2 border-sky-300 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:border-sky-500" autofocus />
-          <div id="adminSearchResults" class="space-y-2 max-h-80 overflow-y-auto"><div class="text-center text-xs text-slate-400 py-4">اكتب أي كلمة للبحث في السجلات</div></div>
+          <input id="adminSearchInput" type="text" placeholder="ابحث بمادة، طابق، تاريخ، مصروف، عامل..." class="w-full border-2 border-sky-300 rounded-xl px-3 py-2.5 text-sm font-bold" autofocus />
+          <div id="adminSearchResults" class="space-y-2 max-h-80 overflow-y-auto"><div class="text-center text-xs text-slate-400 py-4">اكتب أي كلمة للبحث</div></div>
         </div>
       `);
       document.getElementById('adminSearchInput').addEventListener('input', e => {
@@ -1125,13 +1417,13 @@
         const matches = [];
         cloudData.sites.forEach(s => {
           s.lifts.forEach(l => {
-            if (`${s.name} ${l.material} ${l.floor || ''} ${l.direction} ${l.unit}`.toLowerCase().includes(q)) {
-              matches.push({ tag: 'نقلة', color: 'amber', site: s.name, title: `${l.material} (${l.qty} ${l.unit}) — ${l.floor || ''}`, val: fmtCurr(l.price, l.currency), time: l.time });
+            if (`${s.name} ${l.material} ${l.floor || ''} ${l.date || ''} ${l.direction}`.toLowerCase().includes(q)) {
+              matches.push({ tag: 'نقلة', color: 'amber', site: s.name, title: `${l.material} (${l.qty} ${l.unit}) — ${l.floor || ''}`, val: fmtCurr(l.price, l.currency), time: `${l.date || ''} ${l.time}` });
             }
           });
           s.expenses.forEach(ex => {
-            if (`${s.name} ${ex.itemName} ${ex.categoryName}`.toLowerCase().includes(q)) {
-              matches.push({ tag: 'مصروف', color: 'rose', site: s.name, title: `${ex.itemName} (${ex.categoryName})`, val: '-' + fmtCurr(ex.amount, ex.currency), time: ex.time });
+            if (`${s.name} ${ex.itemName} ${ex.categoryName} ${ex.linkedWorkerName || ''} ${ex.date || ''}`.toLowerCase().includes(q)) {
+              matches.push({ tag: 'مصروف', color: 'rose', site: s.name, title: `${ex.itemName}${ex.linkedWorkerName ? ` (على ${ex.linkedWorkerName})` : ''}`, val: '-' + fmtCurr(ex.amount, ex.currency), time: `${ex.date || ''} ${ex.time}` });
             }
           });
           s.deposits.forEach(dep => {
@@ -1140,94 +1432,54 @@
             }
           });
         });
-        if (!matches.length) { resBox.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">لا توجد نتائج مطابقة</div>`; return; }
-        resBox.innerHTML = matches.map(m => `
-          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
-            <div><div class="text-xs font-extrabold text-slate-900"><span class="px-1.5 py-0.5 rounded bg-${m.color}-100 text-${m.color}-800 text-[10px]">${m.tag}</span> ${m.title}</div><div class="text-[11px] text-slate-500">${m.site} • <span class="num">${m.time}</span></div></div>
-            <div class="font-black text-xs num text-slate-800">${m.val}</div>
-          </div>
-        `).join('');
+        if (!matches.length) { resBox.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">لا توجد نتائج</div>`; return; }
+        resBox.innerHTML = matches.map(m => `<div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2"><div><div class="text-xs font-extrabold text-slate-900"><span class="px-1.5 py-0.5 rounded bg-${m.color}-100 text-${m.color}-800 text-[10px]">${m.tag}</span> ${m.title}</div><div class="text-[11px] text-slate-500">${m.site} • <span class="num">${m.time}</span></div></div><div class="font-black text-xs num">${m.val}</div></div>`).join('');
       });
     }
 
     function openOwnerStatementModal(targetSite = null) {
       const site = targetSite || getActiveSite();
-      const m = calcSiteMetrics(site);
+      const m = calcSiteMetrics(site, false);
       const grouped = {};
       site.lifts.forEach(l => {
         const key = `${l.material} (${l.unit}) - ${l.floor || 'غير محدد'}`;
         if (!grouped[key]) grouped[key] = { count: 0, qty: 0, revSyp: 0 };
-        grouped[key].count += 1;
-        grouped[key].qty += Number(l.qty) || 0;
-        grouped[key].revSyp += toSyp(l.price, l.currency);
+        grouped[key].count += 1; grouped[key].qty += Number(l.qty) || 0; grouped[key].revSyp += toSyp(l.price, l.currency);
       });
-      const lines = Object.keys(grouped).length
-        ? Object.entries(grouped).map(([k, v]) => `• ${k}: ${v.count} نقلة | الكمية: ${fmtNum(v.qty)} | القيمة: ${fmtSyp(v.revSyp)}`).join('\n')
-        : '• لا توجد نقلات مسجّلة حتى الآن';
+      const lines = Object.keys(grouped).length ? Object.entries(grouped).map(([k, v]) => `• ${k}: ${v.count} نقلة | الكمية: ${fmtNum(v.qty)} | القيمة: ${fmtSyp(v.revSyp)}`).join('\n') : '• لا توجد نقلات بعد';
       const remainOnOwner = m.liftRevSyp - m.depositsSyp;
-      const text = `كشف حساب نهائي لصاحب المحضر — رافعة برو
-المحضر: ${site.name}
-صاحب المحضر: ${site.ownerName}
---------------------------------
-ملخص النقلات حسب الصنف والطابق:
-${lines}
---------------------------------
-إجمالي قيمة الأعمال: ${fmtSyp(m.liftRevSyp)} (${fmtUsd(toUsd(m.liftRevSyp, 'SYP'))})
-المقبوض سابقاً: ${fmtSyp(m.depositsSyp)} (${fmtUsd(toUsd(m.depositsSyp, 'SYP'))})
-الرصيد النهائي المستحق: ${fmtSyp(remainOnOwner)} (${fmtUsd(toUsd(remainOnOwner, 'SYP'))})
-سعر الصرف المعتمد: 1$ = ${fmtNum(cloudData.exchangeRate)} ل.س`;
-      openModal(`كشف حساب صاحب المحضر — ${site.ownerName}`, `
-        <textarea rows="10" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold leading-relaxed">${text}</textarea>
-        <button id="btnCopyOwnerStmt" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">نسخ الكشف لإرساله لصاحب المحضر</button>
-      `);
-      document.getElementById('btnCopyOwnerStmt').addEventListener('click', () => { copyText(text); showToast('تم نسخ الكشف'); });
+      const text = `كشف حساب نهائي لصاحب المحضر — رافعة برو\nالمحضر: ${site.name}\nصاحب المحضر: ${site.ownerName}\n--------------------------------\n${lines}\n--------------------------------\nإجمالي قيمة الأعمال: ${fmtSyp(m.liftRevSyp)} (${fmtUsd(toUsd(m.liftRevSyp, 'SYP'))})\nالمقبوض سابقاً: ${fmtSyp(m.depositsSyp)} (${fmtUsd(toUsd(m.depositsSyp, 'SYP'))})\nالرصيد النهائي المستحق: ${fmtSyp(remainOnOwner)} (${fmtUsd(toUsd(remainOnOwner, 'SYP'))})\nسعر الصرف المعتمد: 1$ = ${fmtNum(cloudData.exchangeRate)} ل.س`;
+      openModal(`كشف حساب صاحب المحضر — ${site.ownerName}`, `<textarea rows="10" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold leading-relaxed">${text}</textarea><button id="btnCopyOwnerStmt" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">نسخ الكشف</button>`);
+      document.getElementById('btnCopyOwnerStmt').addEventListener('click', () => { copyText(text); showToast('تم النسخ'); });
     }
 
     function openCompleteSiteSummaryModal(site) {
-      const m = calcSiteMetrics(site);
-      if (!site.completed) {
-        site.completed = true;
-        site.completedAt = nowTimeFull();
-        logAudit('إتمام وأرشفة محضر', `${site.name} (صافي: ${fmtSyp(m.netProfitSyp)})`, 'normal');
-        renderAll();
-      }
+      const m = calcSiteMetrics(site, false);
+      if (!site.completed) { site.completed = true; site.completedAt = `${todayISO()} ${nowTimeFull()}`; logAudit('إتمام وأرشفة محضر', site.name, 'normal'); renderAll(); }
       openModal(`ملخص المحضر المنتهي — ${site.name}`, `
         <div class="space-y-3">
-          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center"><div class="text-xs font-extrabold text-emerald-800">تم تسجيل المحضر كـ «خالص / منتهي» ✓</div><div class="text-[11px] text-emerald-700 mt-0.5">المستلم: ${site.supervisor} • صاحب المحضر: ${site.ownerName}</div></div>
+          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center"><div class="text-xs font-extrabold text-emerald-800">تم تسجيل المحضر كـ «خالص / منتهي» ✓</div></div>
           <div class="grid grid-cols-2 gap-2 text-xs">
             <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">عدد النقلات</span><strong class="text-base num">${site.lifts.length}</strong></div>
             <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">قيمة النقلات</span><strong class="text-emerald-700 num">${fmtSyp(m.liftRevSyp)}</strong></div>
             <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">حصة العمال</span><strong class="text-sky-700 num">${fmtSyp(m.workerEarnedSyp)}</strong></div>
-            <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">المصاريف</span><strong class="text-rose-700 num">${fmtSyp(m.expensesSyp)}</strong></div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">مصاريف الورشة</span><strong class="text-rose-700 num">${fmtSyp(m.expensesSyp)}</strong></div>
           </div>
-          <div class="bg-slate-900 text-white rounded-2xl p-3 text-center"><div class="text-xs text-amber-400 font-bold">المحصلة الصافية لهذا المحضر</div><div class="text-xl font-black mt-0.5 num">${fmtSyp(m.netProfitSyp)}</div><div class="text-xs text-amber-300 font-bold num">${fmtUsd(toUsd(m.netProfitSyp, 'SYP'))}</div></div>
+          <div class="bg-slate-900 text-white rounded-2xl p-3 text-center"><div class="text-xs text-amber-400 font-bold">المحصلة الصافية</div><div class="text-xl font-black mt-0.5 num">${fmtSyp(m.netProfitSyp)}</div><div class="text-xs text-amber-300 font-bold num">${fmtUsd(toUsd(m.netProfitSyp, 'SYP'))}</div></div>
           <div class="flex gap-2">
             <button id="btnDoneOwnerStmt" class="flex-1 bg-amber-500 text-slate-950 font-extrabold py-2 rounded-xl text-xs">كشف صاحب المحضر</button>
-            <button id="btnReopenSite" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-xl text-xs">إعادة فتح</button>
+            <button id="btnReopenSite" class="bg-slate-100 text-slate-700 font-bold py-2 px-3 rounded-xl text-xs">إعادة فتح</button>
           </div>
         </div>
       `);
       document.getElementById('btnDoneOwnerStmt').addEventListener('click', () => { closeModal(); openOwnerStatementModal(site); });
-      document.getElementById('btnReopenSite').addEventListener('click', () => { site.completed = false; logAudit('إعادة فتح محضر', site.name, 'edit'); closeModal(); renderAll(); showToast('تمت إعادة فتح المحضر'); });
+      document.getElementById('btnReopenSite').addEventListener('click', () => { site.completed = false; closeModal(); renderAll(); showToast('تمت إعادة فتح المحضر'); });
     }
 
     function openDeleteSiteConfirm(site) {
-      if (cloudData.sites.length <= 1) { showToast('لا يمكن حذف آخر محضر موجود'); return; }
-      openModal(`حذف محضر: ${site.name}`, `
-        <div class="space-y-3 text-center">
-          <p class="text-sm font-bold text-slate-800">هل أنت متأكد من حذف «${site.name}» نهائياً؟</p>
-          <div class="flex gap-2">
-            <button id="btnConfirmDelSite" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف</button>
-            <button id="btnCancelDelSite" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button>
-          </div>
-        </div>
-      `);
-      document.getElementById('btnConfirmDelSite').addEventListener('click', () => {
-        cloudData.sites = cloudData.sites.filter(x => x.id !== site.id);
-        ui.activeSiteId = cloudData.sites[0].id;
-        logAudit('حذف محضر نهائياً', site.name, 'delete');
-        closeModal(); renderAll(); showToast(`تم حذف ${site.name}`);
-      });
+      if (cloudData.sites.length <= 1) { showToast('لا يمكن حذف آخر محضر'); return; }
+      openModal(`حذف محضر: ${site.name}`, `<div class="space-y-3 text-center"><p class="text-sm font-bold">حذف «${site.name}» نهائياً؟</p><div class="flex gap-2"><button id="btnConfirmDelSite" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف</button><button id="btnCancelDelSite" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button></div></div>`);
+      document.getElementById('btnConfirmDelSite').addEventListener('click', () => { cloudData.sites = cloudData.sites.filter(x => x.id !== site.id); ui.activeSiteId = cloudData.sites[0].id; logAudit('حذف محضر', site.name, 'delete'); closeModal(); renderAll(); showToast('تم الحذف'); });
       document.getElementById('btnCancelDelSite').addEventListener('click', closeModal);
     }
 
@@ -1235,21 +1487,26 @@ ${lines}
       const site = getActiveSite();
       const entries = [
         ...site.deposits.map(d => ({ id: d.id, kind: 'dep', type: 'in', title: d.note, amount: d.amount, currency: d.currency, time: d.time })),
-        ...site.expenses.map(e => ({ id: e.id, kind: 'exp', type: 'out', title: `${e.itemName} (${e.categoryName})`, amount: e.amount, currency: e.currency, time: e.time }))
+        ...site.expenses.map(e => ({ id: e.id, kind: 'exp', type: 'out', title: `${e.itemName}${e.linkedWorkerName ? ` [خصم: ${e.linkedWorkerName}]` : ''}`, amount: e.amount, currency: e.currency, time: `${e.date || ''} ${e.time}` }))
       ];
       openModal(`سجل الدفع المحمي — ${site.name}`, `
-        <p class="text-[11px] text-slate-500">سجل الدفع محمي ضد التعديل العشوائي؛ يمكنك فقط حذف فاتورة خاطئة.</p>
+        <p class="text-[11px] text-slate-500">محمي ضد التعديل العشوائي؛ حذف الفاتورة الخاطئة يعكس أثرها تلقائياً.</p>
         <div class="space-y-2">
-          ${entries.length === 0 ? '<div class="text-center text-slate-400 py-4 text-xs">لا توجد حركات مالية بعد</div>' :
-            entries.map(en => `
-              <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border ${en.type === 'in' ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}">
-                <div><div class="font-extrabold text-xs text-slate-900">${en.title}</div><div class="text-[11px] text-slate-500 num">${en.time}</div></div>
-                <div class="flex items-center gap-2"><div class="font-black text-xs num ${en.type === 'in' ? 'text-emerald-700' : 'text-rose-700'}">${en.type === 'in' ? '+' : '-'}${fmtCurr(en.amount, en.currency)}</div><button data-ledger-del="${en.id}" data-ledger-kind="${en.kind}" class="ledger-del-btn p-1.5 rounded-lg bg-white border border-slate-200 text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>
-              </div>
-            `).join('')
+          ${entries.length === 0 ? '<div class="text-center text-slate-400 py-4 text-xs">لا توجد حركات مالية</div>' :
+            entries.map(en => `<div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border ${en.type === 'in' ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}"><div><div class="font-extrabold text-xs text-slate-900">${en.title}</div><div class="text-[11px] text-slate-500 num">${en.time}</div></div><div class="flex items-center gap-2"><div class="font-black text-xs num ${en.type === 'in' ? 'text-emerald-700' : 'text-rose-700'}">${en.type === 'in' ? '+' : '-'}${fmtCurr(en.amount, en.currency)}</div><button data-ledger-del="${en.id}" data-ledger-kind="${en.kind}" class="ledger-del-btn p-1.5 rounded-lg bg-white border text-rose-600"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div></div>`).join('')
           }
         </div>
       `);
+    }
+
+    function reverseExpenseWorkerDeduction(site, exp) {
+      if (exp && exp.linkedWorkerId) {
+        const w = site.workers.find(x => x.id === exp.linkedWorkerId);
+        if (w) {
+          if (exp.currency === 'USD') w.paidUsd = Math.max(0, (Number(w.paidUsd) || 0) - (Number(exp.amount) || 0));
+          else w.paidSyp = Math.max(0, (Number(w.paidSyp) || 0) - (Number(exp.amount) || 0));
+        }
+      }
     }
 
     function handleQuickLiftTap(presetId) {
@@ -1259,17 +1516,7 @@ ${lines}
       const nowMs = Date.now();
       const diffSec = Math.floor((nowMs - (ui.lastLiftTimestamp || 0)) / 1000);
       if (ui.lastLiftTimestamp > 0 && diffSec < 15) {
-        openModal('تنبيه لمنع الكبس المزدوج', `
-          <div class="space-y-3 text-center">
-            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto"><i data-lucide="alert-triangle" class="w-6 h-6"></i></div>
-            <p class="font-bold text-slate-800">تم تسجيل نقلة قبل <span class="num text-amber-600 font-black">${diffSec}</span> ثوانٍ فقط!</p>
-            <p class="text-xs text-slate-500">هل أنت متأكد أنك تريد تسجيل نقلة جديدة (${preset.label} — ${ui.selectedFloor})؟</p>
-            <div class="flex gap-2 pt-2">
-              <button id="btnConfirmRapidLift" class="flex-1 bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">نعم، سجّل النقلة</button>
-              <button id="btnCancelRapidLift" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button>
-            </div>
-          </div>
-        `);
+        openModal('تنبيه لمنع الكبس المزدوج', `<div class="space-y-3 text-center"><div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto"><i data-lucide="alert-triangle" class="w-6 h-6"></i></div><p class="font-bold">تم تسجيل نقلة قبل <span class="num text-amber-600 font-black">${diffSec}</span> ثوانٍ!</p><p class="text-xs text-slate-500">هل تريد تسجيل (${preset.label} — ${ui.selectedFloor})؟</p><div class="flex gap-2 pt-2"><button id="btnConfirmRapidLift" class="flex-1 bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">نعم، سجّل</button><button id="btnCancelRapidLift" class="flex-1 bg-slate-100 font-bold py-2.5 rounded-xl">إلغاء</button></div></div>`);
         document.getElementById('btnConfirmRapidLift').addEventListener('click', () => { closeModal(); commitQuickLift(preset, true, diffSec); });
         document.getElementById('btnCancelRapidLift').addEventListener('click', closeModal);
         return;
@@ -1280,13 +1527,13 @@ ${lines}
     function commitQuickLift(preset, isRapidConfirmed, diffSec) {
       const site = getActiveSite();
       ui.lastLiftTimestamp = Date.now();
-      const lift = { id: uid('l'), material: preset.label, qty: preset.qty, unit: preset.unit, floor: ui.selectedFloor, price: preset.price, currency: preset.currency, direction: preset.direction, time: nowTimeFull() };
+      const lift = { id: uid('l'), material: preset.label, qty: preset.qty, unit: preset.unit, floor: ui.selectedFloor, price: preset.price, currency: preset.currency, direction: preset.direction, date: site.currentDay, time: nowTimeFull() };
       site.lifts.push(lift);
-      logAudit(isRapidConfirmed ? 'نقلة متتالية (بعد التأكيد)' : 'تسجيل نقلة', `${lift.material} (${lift.qty} ${lift.unit}) • ${lift.floor}${isRapidConfirmed ? ` — بعد ${diffSec} ثانية` : ''}`, isRapidConfirmed ? 'rapid' : 'normal');
+      logAudit(isRapidConfirmed ? 'نقلة متتالية (بعد التأكيد)' : 'تسجيل نقلة', `${lift.material} (${lift.qty}) • ${lift.floor}${isRapidConfirmed ? ` — بعد ${diffSec}ث` : ''}`, isRapidConfirmed ? 'rapid' : 'normal');
       renderAll();
       showToast(`تم تسجيل ${lift.material} إلى ${lift.floor}`, () => {
         site.lifts = site.lifts.filter(x => x.id !== lift.id);
-        logAudit('تراجع عن نقلة', `${lift.material} (${lift.floor})`, 'delete');
+        logAudit('تراجع عن نقلة', `${lift.material}`, 'delete');
         renderAll();
       });
     }
@@ -1296,290 +1543,153 @@ ${lines}
       const site = getActiveSite();
       openModal('تخصيص الأزرار الـ 6 السريعة', `
         <form id="presetsForm" class="space-y-3">
-          ${site.presets.map((p, i) => `
-            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="text-lg">${p.icon}</span>
-                <input name="label_${i}" value="${p.label}" required class="flex-1 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold" />
-                <input name="qty_${i}" type="number" step="any" value="${p.qty}" required class="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-extrabold num" />
-                <select name="unit_${i}" class="bg-white border border-slate-300 rounded-lg px-1.5 py-1.5 text-xs font-bold">${['بلوكة', 'لتر مكعب', 'متر مكعب', 'كيس', 'نقلة'].map(u => `<option value="${u}" ${p.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select>
-              </div>
-              ${isAdmin ? `<div class="flex items-center gap-2 pr-7"><span class="text-[11px] text-slate-500 font-bold">السعر:</span><input name="price_${i}" type="number" step="any" value="${p.price}" required class="flex-1 bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-extrabold num" /><select name="cur_${i}" class="bg-white border border-slate-300 rounded-lg px-1.5 py-1 text-xs font-bold"><option value="SYP" ${p.currency === 'SYP' ? 'selected' : ''}>ل.س</option><option value="USD" ${p.currency === 'USD' ? 'selected' : ''}>$</option></select></div>` : ''}
-            </div>
-          `).join('')}
+          ${site.presets.map((p, i) => `<div class="bg-slate-50 p-2.5 rounded-xl border space-y-2"><div class="flex items-center gap-2"><span class="text-lg">${p.icon}</span><input name="label_${i}" value="${p.label}" required class="flex-1 bg-white border rounded-lg px-2 py-1.5 text-xs font-extrabold" /><input name="qty_${i}" type="number" step="any" value="${p.qty}" required class="w-16 bg-white border rounded-lg px-2 py-1.5 text-xs font-extrabold num" /><select name="unit_${i}" class="bg-white border rounded-lg px-1.5 py-1.5 text-xs font-bold">${['بلوكة', 'لتر مكعب', 'متر مكعب', 'كيس', 'نقلة'].map(u => `<option value="${u}" ${p.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>${isAdmin ? `<div class="flex items-center gap-2 pr-7"><span class="text-[11px] text-slate-500 font-bold">السعر:</span><input name="price_${i}" type="number" step="any" value="${p.price}" required class="flex-1 bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-extrabold num" /><select name="cur_${i}" class="bg-white border rounded-lg px-1.5 py-1 text-xs font-bold"><option value="SYP" ${p.currency === 'SYP' ? 'selected' : ''}>ل.س</option><option value="USD" ${p.currency === 'USD' ? 'selected' : ''}>$</option></select></div>` : ''}</div>`).join('')}
           <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ الأزرار</button>
         </form>
       `);
       document.getElementById('presetsForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        site.presets.forEach((p, i) => {
-          p.label = fd.get(`label_${i}`); p.qty = Number(fd.get(`qty_${i}`)) || 1; p.unit = fd.get(`unit_${i}`);
-          if (isAdmin) { p.price = Number(fd.get(`price_${i}`)) || 0; p.currency = fd.get(`cur_${i}`); }
-        });
-        logAudit('تخصيص الأزرار الـ 6', site.name, 'edit');
+        e.preventDefault(); const fd = new FormData(e.target);
+        site.presets.forEach((p, i) => { p.label = fd.get(`label_${i}`); p.qty = Number(fd.get(`qty_${i}`)) || 1; p.unit = fd.get(`unit_${i}`); if (isAdmin) { p.price = Number(fd.get(`price_${i}`)) || 0; p.currency = fd.get(`cur_${i}`); } });
         closeModal(); renderAll(); showToast('تم حفظ الأزرار');
       });
     }
 
     function openLiftModal(existingLift = null) {
       const isAdmin = ui.role === 'admin';
-      const l = existingLift || { material: 'بلوك 15', qty: 45, unit: 'بلوكة', floor: ui.selectedFloor, price: 35000, currency: 'SYP', direction: 'تطليع' };
+      const site = getActiveSite();
+      const l = existingLift || { material: 'بلوك 15', qty: 45, unit: 'بلوكة', floor: ui.selectedFloor, price: 350, currency: 'SYP', direction: 'تطليع' };
       const floors = [...new Set([...getAllFloors(), l.floor || ui.selectedFloor])];
       openModal(existingLift ? 'تعديل النقلة' : 'تسجيل نقلة مخصصة', `
         <form id="liftForm" class="space-y-3">
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم الصنف</label><input name="material" required value="${l.material}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم الصنف</label><input name="material" required value="${l.material}" class="w-full border rounded-xl px-3 py-2 font-bold" /></div>
           <div class="grid grid-cols-2 gap-2">
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">الكمية</label><input name="qty" type="number" step="any" required value="${l.qty}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">الوحدة</label><select name="unit" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold">${['بلوكة', 'لتر مكعب', 'متر مكعب', 'كيس', 'نقلة'].map(u => `<option value="${u}" ${l.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">الكمية</label><input name="qty" type="number" step="any" required value="${l.qty}" class="w-full border rounded-xl px-3 py-2 font-bold num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">الوحدة</label><select name="unit" class="w-full border rounded-xl px-3 py-2 font-bold">${['بلوكة', 'لتر مكعب', 'متر مكعب', 'كيس', 'نقلة'].map(u => `<option value="${u}" ${l.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
           </div>
           <div class="grid grid-cols-2 gap-2">
             <div><label class="block text-xs font-bold text-slate-600 mb-1">الطابق</label><select name="floor" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold">${floors.map(f => `<option value="${f}" ${l.floor === f ? 'selected' : ''}>${f}</option>`).join('')}</select></div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">الاتجاه</label><select name="direction" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="تطليع" ${l.direction === 'تطليع' ? 'selected' : ''}>تطليع ⬆️</option><option value="تنزيل" ${l.direction === 'تنزيل' ? 'selected' : ''}>تنزيل ⬇️</option></select></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">الاتجاه</label><select name="direction" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="تطليع" ${l.direction === 'تطليع' ? 'selected' : ''}>تطليع ⬆️</option><option value="تنزيل" ${l.direction === 'تنزيل' ? 'selected' : ''}>تنزيل ⬇️</option></select></div>
           </div>
-          ${isAdmin ? `
-            <div class="grid grid-cols-2 gap-2">
-              <div><label class="block text-xs font-bold text-slate-600 mb-1">سعر النقلة (خاص بالمدير)</label><input name="price" type="number" step="any" required value="${l.price}" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div>
-              <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP" ${l.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${l.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div>
-            </div>
-          ` : ''}
+          ${isAdmin ? `<div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600 mb-1">سعر النقلة (خاص بالمدير)</label><input name="price" type="number" step="any" required value="${l.price}" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="SYP" ${l.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${l.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div></div>` : ''}
           <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">${existingLift ? 'حفظ التعديل' : 'تسجيل النقلة'}</button>
         </form>
       `);
       document.getElementById('liftForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const site = getActiveSite();
+        e.preventDefault(); const fd = new FormData(e.target);
         if (existingLift) {
-          const oldDesc = `${existingLift.material} (${existingLift.qty} - ${existingLift.floor})`;
           existingLift.material = fd.get('material'); existingLift.qty = Number(fd.get('qty')); existingLift.unit = fd.get('unit');
           existingLift.floor = fd.get('floor'); existingLift.direction = fd.get('direction');
           if (isAdmin) { existingLift.price = Number(fd.get('price')); existingLift.currency = fd.get('currency'); }
-          logAudit('تعديل نقلة', `${oldDesc} ← ${existingLift.material} (${existingLift.qty} - ${existingLift.floor})`, 'edit');
+          logAudit('تعديل نقلة', `${existingLift.material} (${existingLift.floor})`, 'edit');
         } else {
           const mp = site.presets.find(p => p.label === fd.get('material')) || site.presets[0];
-          site.lifts.push({
-            id: uid('l'), material: fd.get('material'), qty: Number(fd.get('qty')), unit: fd.get('unit'), floor: fd.get('floor'),
-            price: isAdmin ? Number(fd.get('price')) : (mp ? mp.price : 35000),
-            currency: isAdmin ? fd.get('currency') : (mp ? mp.currency : 'SYP'),
-            direction: fd.get('direction'), time: nowTimeFull()
-          });
-          logAudit('تسجيل نقلة مخصصة', `${fd.get('material')} (${fd.get('qty')}) • ${fd.get('floor')}`, 'normal');
+          site.lifts.push({ id: uid('l'), material: fd.get('material'), qty: Number(fd.get('qty')), unit: fd.get('unit'), floor: fd.get('floor'), price: isAdmin ? Number(fd.get('price')) : (mp ? mp.price : 350), currency: isAdmin ? fd.get('currency') : (mp ? mp.currency : 'SYP'), direction: fd.get('direction'), date: site.currentDay, time: nowTimeFull() });
+          logAudit('نقلة مخصصة', `${fd.get('material')} (${fd.get('floor')})`, 'normal');
         }
         closeModal(); renderAll(); showToast('تم الحفظ');
       });
     }
 
-    function openQuickExpenseModal(catId, itemName) {
-      const site = getActiveSite();
-      const cat = site.categories.find(c => c.id === catId);
-      if (!cat) return;
-      openModal(`تسجيل مصروف: ${itemName}`, `
-        <form id="qExpForm" class="space-y-3">
-          <div class="text-xs text-slate-500">التصنيف: <strong>${cat.icon} ${cat.name}</strong></div>
-          <div class="grid grid-cols-2 gap-2">
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ المدفوع</label><input name="amount" type="number" step="any" required autofocus placeholder="مثال: 65000" class="w-full border-2 border-rose-300 rounded-xl px-3 py-2.5 text-base font-black num" /></div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
-          </div>
-          <button type="submit" class="w-full bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">حفظ المصروف</button>
-        </form>
-      `);
-      document.getElementById('qExpForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const amount = Number(fd.get('amount')) || 0; const currency = fd.get('currency');
-        site.expenses.push({ id: uid('ex'), categoryId: cat.id, categoryName: cat.name, itemName, amount, currency, time: nowTimeFull() });
-        logAudit('تسجيل مصروف', `${itemName} (${cat.name}) — ${fmtCurr(amount, currency)}`, 'normal');
-        closeModal(); renderAll(); showToast(`تم تسجيل ${itemName}`);
-      });
-    }
-
     function openAuditLogModal() {
-      openModal('السجل الأمني الصامت (للمدير فقط)', `
-        <div class="space-y-2">
-          ${cloudData.auditLog.length === 0 ? '<div class="text-center py-6 text-slate-400 text-xs">السجل فارغ حالياً</div>' :
-            cloudData.auditLog.map(a => {
-              const cls = a.flag === 'rapid' ? 'bg-amber-100 text-amber-800 border-amber-300' : a.flag === 'edit' ? 'bg-sky-50 text-sky-800 border-sky-200' : a.flag === 'delete' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-slate-50 text-slate-800 border-slate-200';
-              return `<div class="p-2.5 rounded-xl border ${cls} space-y-1"><div class="flex items-center justify-between text-[11px] font-extrabold"><span>${a.action}</span><span class="num">${a.time}</span></div><div class="text-xs font-bold">${a.details}</div><div class="text-[10px] opacity-75">${a.actor} • ${a.siteName}</div></div>`;
-            }).join('')
-          }
-        </div>
-      `);
+      openModal('السجل الأمني الصامت (للمدير فقط)', `<div class="space-y-2">${cloudData.auditLog.length === 0 ? '<div class="text-center py-6 text-slate-400 text-xs">السجل فارغ حالياً</div>' : cloudData.auditLog.map(a => { const cls = a.flag === 'rapid' ? 'bg-amber-100 text-amber-800 border-amber-300' : a.flag === 'edit' ? 'bg-sky-50 text-sky-800 border-sky-200' : a.flag === 'delete' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-slate-50 text-slate-800 border-slate-200'; return `<div class="p-2.5 rounded-xl border ${cls} space-y-1"><div class="flex items-center justify-between text-[11px] font-extrabold"><span>${a.action}</span><span class="num">${a.time}</span></div><div class="text-xs font-bold">${a.details}</div><div class="text-[10px] opacity-75">${a.actor} • ${a.siteName}</div></div>`; }).join('')}</div>`);
     }
 
     function openDepositModal() {
-      openModal('إضافة دفعة مقبوضة (عهدة)', `
-        <form id="depForm" class="space-y-3">
-          <div class="grid grid-cols-2 gap-2">
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required placeholder="مثال: 2000000" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
-          </div>
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">ملاحظة</label><input name="note" value="دفعة من صاحب المحضر" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          <button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">إضافة للصندوق</button>
-        </form>
-      `);
+      openModal('إضافة دفعة مقبوضة (عهدة)', `<form id="depForm" class="space-y-3"><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required placeholder="مثال: 20000" class="w-full border rounded-xl px-3 py-2 font-bold num" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div></div><div><label class="block text-xs font-bold text-slate-600 mb-1">ملاحظة</label><input name="note" value="دفعة من صاحب المحضر" class="w-full border rounded-xl px-3 py-2 font-bold" /></div><button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">إضافة للصندوق</button></form>`);
       document.getElementById('depForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const amt = Number(fd.get('amount')) || 0; const cur = fd.get('currency');
-        getActiveSite().deposits.push({ id: uid('dep'), amount: amt, currency: cur, note: fd.get('note'), time: nowTimeFull() });
-        logAudit('إضافة مقبوض', `${fmtCurr(amt, cur)} — ${fd.get('note')}`, 'normal');
-        closeModal(); renderAll(); showToast('تمت إضافة المقبوض');
+        e.preventDefault(); const fd = new FormData(e.target); const amt = Number(fd.get('amount')) || 0; const cur = fd.get('currency');
+        getActiveSite().deposits.push({ id: uid('dep'), amount: amt, currency: cur, note: fd.get('note'), time: `${getActiveSite().currentDay} ${nowTimeFull()}` });
+        logAudit('إضافة مقبوض', `${fmtCurr(amt, cur)}`, 'normal'); closeModal(); renderAll(); showToast('تمت الإضافة');
       });
     }
 
     function openAddCategoryModal() {
-      openModal('إنشاء تصنيف مصاريف جديد', `
-        <form id="catForm" class="space-y-3">
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم التصنيف</label><input name="name" required placeholder="مثال: مواصلات" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">أيقونة</label><select name="icon" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="🥙">🥙 أكل وغدا</option><option value="⚡">⚡ مولدة ووقود</option><option value="🔧">🔧 صيانة وأدوات</option><option value="🚚">🚚 مواصلات</option><option value="📦">📦 عام</option></select></div>
-          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">إنشاء التصنيف</button>
-        </form>
-      `);
+      openModal('إنشاء تصنيف مصاريف جديد', `<form id="catForm" class="space-y-3"><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم التصنيف</label><input name="name" required placeholder="مثال: مواصلات" class="w-full border rounded-xl px-3 py-2 font-bold" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">أيقونة</label><select name="icon" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="🥙">🥙 أكل وغدا</option><option value="⚡">⚡ مولدة ووقود</option><option value="🔧">🔧 صيانة وأدوات</option><option value="🚚">🚚 مواصلات</option><option value="📦">📦 عام</option></select></div><button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">إنشاء التصنيف</button></form>`);
       document.getElementById('catForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const newCat = { id: uid('cat'), name: fd.get('name'), icon: fd.get('icon'), items: ['مصروف عام'] };
-        getActiveSite().categories.push(newCat); ui.activeFolderId = newCat.id;
-        closeModal(); renderAll(); showToast('تم إنشاء التصنيف');
+        e.preventDefault(); const fd = new FormData(e.target); const newCat = { id: uid('cat'), name: fd.get('name'), icon: fd.get('icon'), items: ['مصروف عام'] };
+        getActiveSite().categories.push(newCat); ui.activeFolderId = newCat.id; closeModal(); renderAll(); showToast('تم إنشاء التصنيف');
       });
     }
 
     function openAddCatItemModal(catId) {
-      openModal('إضافة بند سريع داخل التصنيف', `
-        <form id="catItemForm" class="space-y-3">
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم البند</label><input name="name" required placeholder="مثال: فلافل، شاورما" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          <button type="submit" class="w-full bg-slate-900 text-amber-400 font-extrabold py-2.5 rounded-xl">إضافة البند</button>
-        </form>
-      `);
+      openModal('إضافة بند سريع داخل التصنيف', `<form id="catItemForm" class="space-y-3"><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم البند</label><input name="name" required placeholder="مثال: فلافل، سلفة" class="w-full border rounded-xl px-3 py-2 font-bold" /></div><button type="submit" class="w-full bg-slate-900 text-amber-400 font-extrabold py-2.5 rounded-xl">إضافة البند</button></form>`);
       document.getElementById('catItemForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const cat = getActiveSite().categories.find(c => c.id === catId);
-        if (cat) cat.items.push(new FormData(e.target).get('name'));
-        closeModal(); renderAll(); showToast('تمت إضافة البند');
+        e.preventDefault(); const cat = getActiveSite().categories.find(c => c.id === catId);
+        if (cat) cat.items.push(new FormData(e.target).get('name')); closeModal(); renderAll(); showToast('تمت الإضافة');
       });
     }
 
     function openWorkerModal(existingWorker = null) {
       const isAdmin = ui.role === 'admin';
       const w = existingWorker || { name: '', payType: 'percent', payValue: 15, currency: 'SYP', daysWorked: 1 };
-      openModal(existingWorker ? `تعديل: ${w.name}` : 'إضافة عامل جديد', `
-        <form id="workerForm" class="space-y-3">
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم العامل</label><input name="name" required value="${w.name}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          ${isAdmin ? `
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">طريقة الحساب</label><select name="payType" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="percent" ${w.payType === 'percent' ? 'selected' : ''}>نسبة مئوية (%) من النقلات</option><option value="fixed_day" ${w.payType === 'fixed_day' ? 'selected' : ''}>أجر ثابت يومي</option><option value="fixed_lift" ${w.payType === 'fixed_lift' ? 'selected' : ''}>أجر ثابت لكل نقلة</option></select></div>
-            <div class="grid grid-cols-2 gap-2">
-              <div><label class="block text-xs font-bold text-slate-600 mb-1">القيمة (% أو مبلغ)</label><input name="payValue" type="number" step="any" required value="${w.payValue}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
-              <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP" ${w.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${w.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div>
-            </div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">أيام العمل</label><input name="daysWorked" type="number" min="0" required value="${w.daysWorked}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
-          ` : ''}
-          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ</button>
-        </form>
-      `);
+      openModal(existingWorker ? `تعديل: ${w.name}` : 'إضافة عامل جديد', `<form id="workerForm" class="space-y-3"><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم العامل</label><input name="name" required value="${w.name}" class="w-full border rounded-xl px-3 py-2 font-bold" /></div>${isAdmin ? `<div><label class="block text-xs font-bold text-slate-600 mb-1">طريقة الحساب</label><select name="payType" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="percent" ${w.payType === 'percent' ? 'selected' : ''}>نسبة مئوية (%) من النقلات</option><option value="fixed_day" ${w.payType === 'fixed_day' ? 'selected' : ''}>أجر ثابت يومي</option><option value="fixed_lift" ${w.payType === 'fixed_lift' ? 'selected' : ''}>أجر ثابت لكل نقلة</option></select></div><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600 mb-1">القيمة</label><input name="payValue" type="number" step="any" required value="${w.payValue}" class="w-full border rounded-xl px-3 py-2 font-bold num" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="SYP" ${w.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${w.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div></div><div><label class="block text-xs font-bold text-slate-600 mb-1">أيام العمل</label><input name="daysWorked" type="number" min="0" required value="${w.daysWorked}" class="w-full border rounded-xl px-3 py-2 font-bold num" /></div>` : ''}<button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ</button></form>`);
       document.getElementById('workerForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const site = getActiveSite();
-        if (existingWorker) {
-          existingWorker.name = fd.get('name');
-          if (isAdmin) { existingWorker.payType = fd.get('payType'); existingWorker.payValue = Number(fd.get('payValue')); existingWorker.currency = fd.get('currency'); existingWorker.daysWorked = Number(fd.get('daysWorked')); }
-        } else {
-          site.workers.push({ id: uid('w'), name: fd.get('name'), isSupervisor: false, present: true, payType: isAdmin ? fd.get('payType') : 'percent', payValue: isAdmin ? Number(fd.get('payValue')) : 15, currency: isAdmin ? fd.get('currency') : 'SYP', daysWorked: isAdmin ? Number(fd.get('daysWorked')) : 1, paidSyp: 0, paidUsd: 0 });
-        }
+        e.preventDefault(); const fd = new FormData(e.target); const site = getActiveSite();
+        if (existingWorker) { existingWorker.name = fd.get('name'); if (isAdmin) { existingWorker.payType = fd.get('payType'); existingWorker.payValue = Number(fd.get('payValue')); existingWorker.currency = fd.get('currency'); existingWorker.daysWorked = Number(fd.get('daysWorked')); } }
+        else { site.workers.push({ id: uid('w'), name: fd.get('name'), isSupervisor: false, present: true, payType: isAdmin ? fd.get('payType') : 'percent', payValue: isAdmin ? Number(fd.get('payValue')) : 15, currency: isAdmin ? fd.get('currency') : 'SYP', daysWorked: isAdmin ? Number(fd.get('daysWorked')) : 1, paidSyp: 0, paidUsd: 0 }); }
         closeModal(); renderAll(); showToast('تم الحفظ');
       });
     }
 
     function openPayWorkerModal(worker) {
-      openModal(`تسجيل دفعة / قبض — ${worker.name}`, `
-        <form id="payWForm" class="space-y-3">
-          <div class="grid grid-cols-2 gap-2">
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
-            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
-          </div>
-          <button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">تأكيد الدفعة</button>
-        </form>
-      `);
+      openModal(`تسجيل دفعة / قبض — ${worker.name}`, `<form id="payWForm" class="space-y-3"><div class="grid grid-cols-2 gap-2"><div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required class="w-full border rounded-xl px-3 py-2 font-bold num" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div></div><button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">تأكيد الدفعة</button></form>`);
       document.getElementById('payWForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const amt = Number(fd.get('amount')) || 0; const cur = fd.get('currency');
+        e.preventDefault(); const fd = new FormData(e.target); const amt = Number(fd.get('amount')) || 0; const cur = fd.get('currency');
         if (cur === 'USD') worker.paidUsd = (worker.paidUsd || 0) + amt; else worker.paidSyp = (worker.paidSyp || 0) + amt;
-        logAudit('تسجيل دفعة لعامل/مراقب', `${worker.name} — ${fmtCurr(amt, cur)}`, 'normal');
-        closeModal(); renderAll(); showToast('تم تسجيل الدفعة');
+        logAudit('تسجيل دفعة لعامل/مراقب', `${worker.name} — ${fmtCurr(amt, cur)}`, 'normal'); closeModal(); renderAll(); showToast('تم تسجيل الدفعة');
       });
     }
 
     function openWorkerStatement(worker) {
-      const site = getActiveSite();
-      const earnedSyp = calcWorkerEarnedSyp(worker, site);
+      const site = getActiveSite(); const earnedSyp = calcWorkerEarnedSyp(worker, site);
       const paidSyp = (Number(worker.paidSyp) || 0) + toSyp(worker.paidUsd || 0, 'USD');
       const remainSyp = earnedSyp - paidSyp;
-      const text = `كشف حساب — رافعة برو\nالاسم: ${worker.name}\nالمحضر: ${site.name}\nأيام العمل: ${worker.daysWorked}\nالمستحق: ${fmtSyp(earnedSyp)} (${fmtUsd(toUsd(earnedSyp, 'SYP'))})\nالمدفوع له: ${fmtSyp(paidSyp)}\nالمتبقي له: ${fmtSyp(remainSyp)} (${fmtUsd(toUsd(remainSyp, 'SYP'))})`;
-      openModal('كشف حساب جاهز للمشاركة', `<textarea rows="8" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold">${text}</textarea><button id="btnCopyStmt" class="w-full bg-sky-600 text-white font-extrabold py-2.5 rounded-xl">نسخ لإرساله على تلغرام / واتساب</button>`);
+      const text = `كشف حساب — رافعة برو\nالاسم: ${worker.name}\nالمحضر: ${site.name}\nأيام العمل: ${worker.daysWorked}\nالمستحق: ${fmtSyp(earnedSyp)} (${fmtUsd(toUsd(earnedSyp, 'SYP'))})\nالمدفوع/المخصوم: ${fmtSyp(paidSyp)}\nالمتبقي له: ${fmtSyp(remainSyp)} (${fmtUsd(toUsd(remainSyp, 'SYP'))})`;
+      openModal('كشف حساب جاهز للمشاركة', `<textarea rows="8" readonly class="w-full bg-slate-50 border rounded-xl p-3 text-xs font-bold">${text}</textarea><button id="btnCopyStmt" class="w-full bg-sky-600 text-white font-extrabold py-2.5 rounded-xl">نسخ لإرساله على تلغرام / واتساب</button>`);
       document.getElementById('btnCopyStmt').addEventListener('click', () => { copyText(text); showToast('تم النسخ'); });
     }
 
     function openAddSiteModal() {
-      openModal('إضافة محضر ومراقب جديد', `
-        <form id="siteForm" class="space-y-3">
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المحضر</label><input name="name" required placeholder="مثال: محضر المزة 2" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المراقب المستلم</label><input name="supervisor" required placeholder="مثال: أبو سامر" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">رقم Telegram ID للمراقب (اختياري)</label><input name="supervisorTgId" placeholder="مثال: 5123456789" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div>
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم صاحب المحضر</label><input name="ownerName" required placeholder="اسم المتعهد أو صاحب البناء" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
-          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">إنشاء المحضر</button>
-        </form>
-      `);
+      openModal('إضافة محضر ومراقب جديد', `<form id="siteForm" class="space-y-3"><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المحضر</label><input name="name" required placeholder="مثال: محضر المزة 2" class="w-full border rounded-xl px-3 py-2 font-bold" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المراقب المستلم</label><input name="supervisor" required placeholder="مثال: أبو سامر" class="w-full border rounded-xl px-3 py-2 font-bold" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">رقم Telegram ID للمراقب</label><input name="supervisorTgId" placeholder="اختياري الآن" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div><div><label class="block text-xs font-bold text-slate-600 mb-1">اسم صاحب المحضر</label><input name="ownerName" required placeholder="اسم المتعهد" class="w-full border rounded-xl px-3 py-2 font-bold" /></div><button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">إنشاء المحضر</button></form>`);
       document.getElementById('siteForm').addEventListener('submit', e => {
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const ns = makeDefaultSite(uid('site'), fd.get('name'), fd.get('supervisor'), fd.get('ownerName'), fd.get('supervisorTgId'));
-        cloudData.sites.push(ns); ui.activeSiteId = ns.id;
-        logAudit('إنشاء محضر جديد', `${ns.name} | المستلم: ${ns.supervisor}`, 'normal');
-        closeModal(); renderAll(); showToast(`تمت إضافة ${ns.name}`);
+        e.preventDefault(); const fd = new FormData(e.target); const ns = makeDefaultSite(uid('site'), fd.get('name'), fd.get('supervisor'), fd.get('ownerName'), fd.get('supervisorTgId'));
+        cloudData.sites.push(ns); ui.activeSiteId = ns.id; logAudit('إنشاء محضر', ns.name, 'normal'); closeModal(); renderAll(); showToast('تمت الإضافة');
       });
     }
 
     function openDailyReportModal() {
-      const lines = cloudData.sites.map(s => {
-        const m = calcSiteMetrics(s);
-        return `• ${s.name} (${s.supervisor})${s.completed ? ' [خالص]' : ''}: ${s.lifts.length} نقلة | النقلات ${fmtSyp(m.liftRevSyp)} | المصاريف ${fmtSyp(m.expensesSyp)} | صافي ${fmtSyp(m.netProfitSyp)}`;
-      }).join('\n');
-      const report = `التقرير اليومي — رافعة برو\nسعر الصرف: 1$ = ${fmtNum(cloudData.exchangeRate)} ل.س\n----------------\n${lines}`;
-      openModal('تقرير نهاية اليوم لتلغرام', `<textarea rows="8" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold">${report}</textarea><button id="btnCopyReport" class="w-full bg-sky-600 text-white font-extrabold py-2.5 rounded-xl">نسخ التقرير اليومي</button>`);
-      document.getElementById('btnCopyReport').addEventListener('click', () => { copyText(report); showToast('تم نسخ التقرير'); });
+      const lines = cloudData.sites.map(s => { const m = calcSiteMetrics(s, true); return `• ${s.name} (${s.supervisor}): ${m.liftsCount} نقلة | النقلات ${fmtSyp(m.liftRevSyp)} | المصاريف ${fmtSyp(m.expensesSyp)} | صافي ${fmtSyp(m.netProfitSyp)}`; }).join('\n');
+      const report = `التقرير اليومي — رافعة برو (${todayISO()})\nسعر الصرف: 1$ = ${fmtNum(cloudData.exchangeRate)} ل.س\n----------------\n${lines}`;
+      openModal('تقرير نهاية اليوم لتلغرام', `<textarea rows="8" readonly class="w-full bg-slate-50 border rounded-xl p-3 text-xs font-bold">${report}</textarea><button id="btnCopyReport" class="w-full bg-sky-600 text-white font-extrabold py-2.5 rounded-xl">نسخ التقرير</button>`);
+      document.getElementById('btnCopyReport').addEventListener('click', () => { copyText(report); showToast('تم النسخ'); });
     }
 
     function openRateModal() {
-      openModal('تعديل سعر صرف الدولار', `
+      openModal('تعديل سعر صرف الدولار (العملة الجديدة / القديمة)', `
         <form id="rateForm" class="space-y-3">
-          <div><label class="block text-xs font-bold text-slate-600 mb-1">كم ليرة سورية مقابل 1 دولار؟</label><input name="rate" type="number" min="100" step="100" required value="${cloudData.exchangeRate}" class="w-full border border-amber-400 rounded-xl px-3 py-2.5 text-lg font-black num" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">كم ليرة سورية مقابل 1 دولار؟ (مثلاً 100 أو أي رقم)</label><input name="rate" type="number" min="0.01" step="any" required value="${cloudData.exchangeRate}" class="w-full border border-amber-400 rounded-xl px-3 py-2.5 text-lg font-black num" /></div>
           <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">تحديث السعر</button>
         </form>
       `);
       document.getElementById('rateForm').addEventListener('submit', e => {
         e.preventDefault();
-        cloudData.exchangeRate = Number(new FormData(e.target).get('rate')) || 14500;
-        closeModal(); renderAll(); showToast('تم تحديث سعر الصرف');
+        const v = Number(new FormData(e.target).get('rate'));
+        if (v > 0) { cloudData.exchangeRate = v; closeModal(); renderAll(); showToast(`تم التحديث: 1$ = ${fmtNum(v)} ل.س`); }
       });
     }
 
     const TOUR_STEPS = [
-      { tab: 'lifts', elId: 'quickLiftCard', title: '1. تحديد الطابق وتسجيل النقلات', desc: 'اختر الطابق من الشريط بالأعلى ثم اضغط أي صنف ليُسجل فوراً مع طابقه. ويمكنك تعديل الأزرار الـ 6 بأي وقت.' },
-      { tab: 'expenses', elId: 'expensesCard', title: '2. المصاريف المبسّطة', desc: 'اختر التصنيف بالأعلى ثم اضغط اسم البند وأدخل المبلغ، فيصل فوراً للمدير ويُخصم من العهدة.' },
-      { tab: 'workers', elId: 'workersCard', title: '3. العمال وحساب المراقب', desc: 'المراقب يعلّم الحضور فقط، بينما المدير يتابع حساب العمال والمراقب معاً وكشوفات الحساب.' },
-      { tab: 'lifts', elId: 'pettyCashCard', title: '4. تبديل/إزالة المراقب وكشف صاحب المحضر', desc: 'اضغط «المراقب / تعديل» لتبديل المراقب أو فصل صلاحيته فوراً عند الطوارئ، واستخرج كشفاً نظيفاً لصاحب المحضر.' },
-      { tab: 'summary', elId: 'adminSummaryView', title: '5. البحث وإتمام المحاضر والمحصلة', desc: 'أنهِ أي محضر بضغطة زر ليُعرض ملخصه وينتقل لأسفل القائمة، واستخدم زر البحث والسجل الأمني بالأعلى.' }
+      { tab: 'lifts', elId: 'quickLiftCard', title: '1. نظام الأيام والطوابق والنقلات', desc: 'ابدأ كل يوم بزر «+ يوم جديد» بالأعلى، اختر الطابق، ثم اكبس الصنف. يمكنك أيضاً تصفية السجل حسب اليوم أو الطابق.' },
+      { tab: 'expenses', elId: 'expensesCard', title: '2. المصاريف والخصم التلقائي من راتب العامل', desc: 'عند تسجيل أي مصروف يمكنك اختيار ربطه بعامل ليُخصم من راتبه تلقائياً، ويمكنك حذف أي بند أضفته بالخطأ بعلامة ✕.' },
+      { tab: 'workers', elId: 'workersCard', title: '3. العمال وحساب المراقب', desc: 'المراقب يرى مستحقاته اليومية وصافيه الشخصي فقط، بينما المدير يدير جميع العمال والمراقب العام.' },
+      { tab: 'lifts', elId: 'pettyCashCard', title: '4. تبديل/فصل المراقب وكشف صاحب المحضر', desc: 'اضغط «المراقب / تعديل» لتبديل المراقب أو فصل صلاحيته فوراً عند الطوارئ، وأصدر كشفاً نظيفاً لصاحب المحضر.' },
+      { tab: 'summary', elId: 'adminSummaryView', title: '5. المراقب العام والعملة الجديدة', desc: 'عدّل سعر الصرف بحرية (حتى 100 ليرة للدولار)، وتابع حساب المراقب العام (9019697312) وأنهِ المحاضر بضغطة زر.' }
     ];
 
     function showTourStep(idx) {
       document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
       if (idx < 0 || idx >= TOUR_STEPS.length) { ui.tourIndex = -1; document.getElementById('tourBanner').classList.add('hidden'); return; }
-      ui.tourIndex = idx;
-      const step = TOUR_STEPS[idx];
-      ui.activeTab = step.tab;
-      renderAll(false);
+      ui.tourIndex = idx; const step = TOUR_STEPS[idx]; ui.activeTab = step.tab; renderAll(false);
       const t = document.getElementById(step.elId);
       if (t && !t.classList.contains('hidden')) { t.classList.add('tour-highlight'); t.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
       document.getElementById('tourStepBadge').textContent = `${idx + 1} / ${TOUR_STEPS.length}`;
@@ -1593,20 +1703,23 @@ ${lines}
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
       else fallbackCopy(text);
     }
-    function fallbackCopy(text) {
-      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); } catch (e) {}
-      document.body.removeChild(ta);
-    }
+    function fallbackCopy(text) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} document.body.removeChild(ta); }
 
     document.getElementById('btnCopyUnknownId').addEventListener('click', () => { if (tgUser) { copyText(String(tgUser.id)); showToast('تم نسخ رقم المعرّف'); } });
     document.getElementById('btnRoleAdmin').addEventListener('click', () => { ui.role = 'admin'; renderAll(false); });
+    document.getElementById('btnRoleGenSup').addEventListener('click', () => { ui.role = 'general_supervisor'; ui.activeTab = 'lifts'; renderAll(false); });
     document.getElementById('btnRoleSup').addEventListener('click', () => { ui.role = 'supervisor'; ui.assignedSiteId = ui.activeSiteId; ui.activeTab = 'lifts'; renderAll(false); });
     document.getElementById('btnStartTour').addEventListener('click', () => showTourStep(0));
     document.getElementById('btnTourClose').addEventListener('click', () => showTourStep(-1));
     document.getElementById('btnTourPrev').addEventListener('click', () => { if (ui.tourIndex > 0) showTourStep(ui.tourIndex - 1); });
     document.getElementById('btnTourNext').addEventListener('click', () => { if (ui.tourIndex < TOUR_STEPS.length - 1) showTourStep(ui.tourIndex + 1); else showTourStep(-1); });
 
+    document.getElementById('btnStartNewDay').addEventListener('click', openStartNewDayModal);
+    document.getElementById('activeDaySelect').addEventListener('change', e => { ui.dayFilter = e.target.value; renderAll(false); });
+    document.getElementById('liftsFloorFilter').addEventListener('change', e => { ui.liftsFloorFilter = e.target.value; renderAll(false); });
+
+    document.getElementById('btnEditGenSup').addEventListener('click', openEditGenSupModal);
+    document.getElementById('btnPayGenSup').addEventListener('click', openPayGenSupModal);
     document.getElementById('btnOpenSearch').addEventListener('click', openAdminSearchModal);
     document.getElementById('btnOpenAuditLog').addEventListener('click', openAuditLogModal);
     document.getElementById('btnOpenRateModal').addEventListener('click', openRateModal);
@@ -1628,17 +1741,17 @@ ${lines}
     document.querySelectorAll('.nav-btn').forEach(btn => { btn.addEventListener('click', () => { ui.activeTab = btn.dataset.tab; renderAll(false); }); });
     document.getElementById('summarySiteFilter').addEventListener('change', e => { ui.summarySiteFilter = e.target.value; renderAll(false); });
     document.getElementById('summaryScopeFilter').addEventListener('change', e => { ui.summaryScopeFilter = e.target.value; renderAll(false); });
-    document.getElementById('summaryRateInput').addEventListener('input', e => { const v = Number(e.target.value); if (v >= 100) { cloudData.exchangeRate = v; renderAll(true); } });
+    document.getElementById('summaryRateInput').addEventListener('input', e => { const v = Number(e.target.value); if (v > 0) { cloudData.exchangeRate = v; renderAll(true); } });
 
     document.addEventListener('click', e => {
       const floorBtn = e.target.closest('.floor-pill-btn');
       if (floorBtn) { ui.selectedFloor = floorBtn.dataset.floorPick; renderAll(false); return; }
 
       const sitePill = e.target.closest('.site-pill');
-      if (sitePill) { ui.activeSiteId = sitePill.dataset.siteId; renderAll(false); return; }
+      if (sitePill) { ui.activeSiteId = sitePill.dataset.siteId; ui.dayFilter = 'CURRENT'; ui.liftsFloorFilter = 'ALL'; renderAll(false); return; }
 
       const jumpSite = e.target.closest('.jump-site-btn');
-      if (jumpSite) { ui.activeSiteId = jumpSite.dataset.jumpSite; ui.activeTab = 'lifts'; renderAll(false); showToast(`تم فتح ${getActiveSite().name}`); return; }
+      if (jumpSite) { ui.activeSiteId = jumpSite.dataset.jumpSite; ui.dayFilter = 'CURRENT'; ui.activeTab = 'lifts'; renderAll(false); showToast(`تم فتح ${getActiveSite().name}`); return; }
 
       const compSite = e.target.closest('.complete-site-btn');
       if (compSite) { const s = cloudData.sites.find(x => x.id === compSite.dataset.completeSite); if (s) openCompleteSiteSummaryModal(s); return; }
@@ -1654,10 +1767,9 @@ ${lines}
 
       const delLift = e.target.closest('.del-lift-btn');
       if (delLift) {
-        const site = getActiveSite();
-        const rem = site.lifts.find(x => x.id === delLift.dataset.delLift);
+        const site = getActiveSite(); const rem = site.lifts.find(x => x.id === delLift.dataset.delLift);
         site.lifts = site.lifts.filter(x => x.id !== delLift.dataset.delLift);
-        if (rem) logAudit('حذف نقلة', `${rem.material} (${rem.qty} - ${rem.floor || ''})`, 'delete');
+        if (rem) logAudit('حذف نقلة', `${rem.material} (${rem.floor || ''})`, 'delete');
         renderAll();
         if (rem) showToast('تم حذف النقلة', () => { site.lifts.push(rem); renderAll(); });
         return;
@@ -1669,18 +1781,32 @@ ${lines}
       const addCatItemBtn = e.target.closest('.add-cat-item-btn');
       if (addCatItemBtn) { openAddCatItemModal(addCatItemBtn.dataset.addItemCat); return; }
 
+      const delChipBtn = e.target.closest('.del-chip-btn');
+      if (delChipBtn) {
+        const site = getActiveSite();
+        const cat = site.categories.find(c => c.id === delChipBtn.dataset.delChipCat);
+        const idx = Number(delChipBtn.dataset.delChipIdx);
+        if (cat && !isNaN(idx) && cat.items[idx] !== undefined) {
+          const itemName = cat.items[idx];
+          openModal('حذف بند مصروف', `<div class="space-y-3 text-center"><p class="font-bold">هل تريد حذف زر «${itemName}» من تصنيف ${cat.name}؟</p><div class="flex gap-2"><button id="btnYesDelChip" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف البند</button><button id="btnNoDelChip" class="flex-1 bg-slate-100 font-bold py-2.5 rounded-xl">إلغاء</button></div></div>`);
+          document.getElementById('btnYesDelChip').addEventListener('click', () => { cat.items.splice(idx, 1); closeModal(); renderAll(); showToast(`تم حذف بند «${itemName}»`); });
+          document.getElementById('btnNoDelChip').addEventListener('click', closeModal);
+        }
+        return;
+      }
+
       const pickChip = e.target.closest('.pick-exp-chip');
       if (pickChip) { openQuickExpenseModal(pickChip.dataset.pickCat, pickChip.dataset.pickItem); return; }
 
       const delExp = e.target.closest('.del-exp-btn');
       if (delExp) {
-        const site = getActiveSite();
-        const rem = site.expenses.find(x => x.id === delExp.dataset.delExp);
+        const site = getActiveSite(); const rem = site.expenses.find(x => x.id === delExp.dataset.delExp);
         if (!rem) return;
-        openModal('حذف فاتورة مصروف', `<div class="space-y-3 text-center"><p class="font-bold text-slate-800">هل تريد حذف «${rem.itemName}» (${fmtCurr(rem.amount, rem.currency)})؟</p><div class="flex gap-2"><button id="btnYesDelExp" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف</button><button id="btnNoDelExp" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button></div></div>`);
+        openModal('حذف فاتورة مصروف', `<div class="space-y-3 text-center"><p class="font-bold">حذف «${rem.itemName}» (${fmtCurr(rem.amount, rem.currency)})؟${rem.linkedWorkerName ? `<br><span class="text-xs text-sky-700">سيُعاد المبلغ تلقائياً لحساب العامل ${rem.linkedWorkerName}</span>` : ''}</p><div class="flex gap-2"><button id="btnYesDelExp" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف</button><button id="btnNoDelExp" class="flex-1 bg-slate-100 font-bold py-2.5 rounded-xl">إلغاء</button></div></div>`);
         document.getElementById('btnYesDelExp').addEventListener('click', () => {
+          reverseExpenseWorkerDeduction(site, rem);
           site.expenses = site.expenses.filter(x => x.id !== rem.id);
-          logAudit('حذف فاتورة مصروف', `${rem.itemName} (${fmtCurr(rem.amount, rem.currency)})`, 'delete');
+          logAudit('حذف مصروف', `${rem.itemName} (${fmtCurr(rem.amount, rem.currency)})`, 'delete');
           closeModal(); renderAll(); showToast('تم حذف المصروف');
         });
         document.getElementById('btnNoDelExp').addEventListener('click', closeModal);
@@ -1689,18 +1815,17 @@ ${lines}
 
       const ledgerDel = e.target.closest('.ledger-del-btn');
       if (ledgerDel) {
-        const site = getActiveSite();
-        const id = ledgerDel.dataset.ledgerDel; const kind = ledgerDel.dataset.ledgerKind;
+        const site = getActiveSite(); const id = ledgerDel.dataset.ledgerDel; const kind = ledgerDel.dataset.ledgerKind;
         if (kind === 'dep') {
-          const d = site.deposits.find(x => x.id === id);
-          site.deposits = site.deposits.filter(x => x.id !== id);
-          if (d) logAudit('حذف دفعة مقبوضة من السجل', `${d.note} (${fmtCurr(d.amount, d.currency)})`, 'delete');
+          const d = site.deposits.find(x => x.id === id); site.deposits = site.deposits.filter(x => x.id !== id);
+          if (d) logAudit('حذف دفعة مقبوضة', `${d.note}`, 'delete');
         } else {
           const ex = site.expenses.find(x => x.id === id);
+          reverseExpenseWorkerDeduction(site, ex);
           site.expenses = site.expenses.filter(x => x.id !== id);
-          if (ex) logAudit('حذف فاتورة من السجل', `${ex.itemName} (${fmtCurr(ex.amount, ex.currency)})`, 'delete');
+          if (ex) logAudit('حذف مصروف من السجل', `${ex.itemName}`, 'delete');
         }
-        renderAll(); openLedgerModal(); showToast('تم الحذف من السجل المحمي');
+        renderAll(); openLedgerModal(); showToast('تم الحذف وعكس الأثر المالي');
         return;
       }
 

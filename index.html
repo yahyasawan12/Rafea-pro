@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>رافعة برو | إدارة الرافعات والورشات والحسابات</title>
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS, Lucide Icons, Chart.js -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Firebase Compat SDK for Live Real-Time Sync -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+    body {
+      font-family: 'Tajawal', 'Segoe UI', Tahoma, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .num {
+      font-variant-numeric: tabular-nums;
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+    .tap-btn { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+    .tap-btn:active { transform: scale(0.96); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .pulse-dot { animation: pulseDot 1.8s infinite; }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(1.25); }
+    }
+    .tour-highlight {
+      position: relative;
+      z-index: 45;
+      box-shadow: 0 0 0 4px #f59e0b, 0 0 0 9999px rgba(15, 23, 42, 0.55);
+      border-radius: 1rem;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-24">
+
+  <!-- Unassigned User Screen (if unknown Telegram user opens bot) -->
+  <div id="unassignedScreen" class="hidden min-h-screen flex items-center justify-center p-4 bg-slate-900 text-white">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl">
+      <div class="w-16 h-16 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center mx-auto">
+        <i data-lucide="shield-alert" class="w-8 h-8"></i>
+      </div>
+      <h2 class="text-xl font-black">أهلاً بك في رافعة برو</h2>
+      <p class="text-xs text-slate-300 leading-relaxed">حسابك غير مربوط بأي محضر حالياً. انسخ رقم معرّفك أدناه وأرسله للمدير العام ليربطك بورشتك خلال ثوانٍ:</p>
+      <div id="unknownUserIdBox" class="bg-slate-950 border border-amber-500/40 rounded-xl py-3 px-4 text-lg font-black text-amber-400 num">---</div>
+      <button id="btnCopyUnknownId" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl">نسخ رقم المعرّف</button>
+    </div>
+  </div>
+
+  <!-- Main App Wrapper -->
+  <div id="mainAppWrapper">
+    <!-- Top Status, Tour & Sync Bar -->
+    <div class="bg-slate-950 text-white px-3 py-2 text-xs sticky top-0 z-40 border-b border-slate-800 shadow-md">
+      <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <div id="devRoleSwitch" class="hidden flex items-center gap-1">
+            <button id="btnRoleAdmin" class="px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950">المدير العام</button>
+            <button id="btnRoleSup" class="px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200 hover:bg-slate-700">مراقب</button>
+          </div>
+          <button id="btnStartTour" class="px-2.5 py-1 rounded-lg font-bold transition bg-sky-600/25 text-sky-200 border border-sky-500/40 hover:bg-sky-600/40 flex items-center gap-1">
+            <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+            <span>جولة تعريفية</span>
+          </button>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span id="syncStatusPill" class="px-2.5 py-1 rounded-lg font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+            <span id="netDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="netLabel">مزامنة مباشرة</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App Header -->
+    <header class="bg-slate-900 text-white pt-4 pb-5 px-4 shadow-lg">
+      <div class="max-w-5xl mx-auto">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 shadow-lg shrink-0">
+              <i data-lucide="construction" class="w-6 h-6"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h1 class="text-lg sm:text-xl font-extrabold tracking-tight truncate">رافعة برو</h1>
+                <span id="roleBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold shrink-0">المدير العام</span>
+              </div>
+              <p id="headerSubtitle" class="text-xs text-slate-400 mt-0.5 truncate">إدارة الورشات والرافعات • ربط لحظي</p>
+            </div>
+          </div>
+
+          <!-- Admin-Only Quick Controls: Search, Audit Log, Exchange Rate -->
+          <div id="adminHeaderControls" class="flex items-center gap-1.5 shrink-0">
+            <button id="btnOpenSearch" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl p-2 text-sky-300 transition" title="بحث في السجلات (للمدير)">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </button>
+            <button id="btnOpenAuditLog" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-2 py-2 text-amber-300 transition flex items-center gap-1" title="السجل الأمني">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+              <span id="auditCountBadge" class="num text-[10px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-full">0</span>
+            </button>
+            <button id="btnOpenRateModal" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl px-2.5 py-1.5 text-right transition">
+              <div class="text-[10px] text-slate-400">الصرف</div>
+              <div class="text-xs font-extrabold text-amber-400 num">1$=<span id="headerRateVal">14,500</span></div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Site Selector Bar -->
+        <div class="mt-4 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="sitePillsContainer"></div>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-5xl mx-auto px-3 sm:px-4 -mt-2 space-y-4">
+
+      <!-- Site Petty Cash & Metadata Card (ADMIN ONLY) -->
+      <section id="pettyCashCard" class="bg-white rounded-2xl shadow-md border border-slate-200/80 p-4">
+        <div class="flex flex-wrap items-start justify-between gap-2 pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="activeSiteStatusDot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot"></span>
+              <h2 id="activeSiteTitle" class="font-extrabold text-base sm:text-lg text-slate-900">محضر 1</h2>
+              <span id="activeSiteDoneBadge" class="hidden text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full">منتهي ✓</span>
+            </div>
+            <p id="activeSiteMeta" class="text-xs text-slate-500 mt-0.5">المستلم: أبو أحمد • صاحب المحضر: غير محدد</p>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button id="btnEditSiteMeta" class="tap-btn bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-2.5 py-2 rounded-xl flex items-center gap-1" title="تعديل بيانات المحضر">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+              <span>تعديل</span>
+            </button>
+            <button id="btnOwnerStatement" class="tap-btn bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-2.5 py-2 rounded-xl flex items-center gap-1">
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>كشف صاحب المحضر</span>
+            </button>
+            <button id="btnAddDeposit" class="tap-btn bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-2.5 py-2 rounded-xl flex items-center gap-1">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>مقبوض</span>
+            </button>
+            <button id="btnViewLedger" class="tap-btn bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-2.5 py-2 rounded-xl flex items-center gap-1">
+              <i data-lucide="scroll-text" class="w-3.5 h-3.5"></i>
+              <span>سجل الدفع</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 sm:gap-3 mt-3">
+          <div class="bg-slate-50 rounded-xl p-2.5 sm:p-3 border border-slate-100">
+            <div class="text-[11px] text-slate-500 font-medium">المقبوض (العهدة)</div>
+            <div id="pcReceivedSyp" class="text-sm sm:text-base font-extrabold text-slate-900 mt-0.5 num">0 ل.س</div>
+            <div id="pcReceivedUsd" class="text-[11px] text-slate-400 font-medium num">$0</div>
+          </div>
+          <div class="bg-rose-50/70 rounded-xl p-2.5 sm:p-3 border border-rose-100">
+            <div class="text-[11px] text-rose-600 font-medium">المصروف والدفعات</div>
+            <div id="pcSpentSyp" class="text-sm sm:text-base font-extrabold text-rose-700 mt-0.5 num">0 ل.س</div>
+            <div id="pcSpentUsd" class="text-[11px] text-rose-400 font-medium num">$0</div>
+          </div>
+          <div id="pcBalanceBox" class="bg-emerald-50/80 rounded-xl p-2.5 sm:p-3 border border-emerald-200">
+            <div class="text-[11px] text-emerald-700 font-bold">الباقي بالصندوق</div>
+            <div id="pcBalanceSyp" class="text-sm sm:text-base font-black text-emerald-800 mt-0.5 num">0 ل.س</div>
+            <div id="pcBalanceUsd" class="text-[11px] text-emerald-600 font-bold num">$0</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Supervisor Clean Header Card (NO prices, NO deposits!) -->
+      <section id="supervisorSiteBanner" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-4 flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot"></span>
+            <h2 id="supSiteName" class="font-extrabold text-base text-slate-900">محضر 1</h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">واجهة المراقب السريعة • يصل كل إدخال للمدير مباشرة</p>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-3 py-1.5 text-center">
+          <div class="text-[10px] font-bold">النقلات</div>
+          <div id="supTodayCount" class="text-lg font-black num">0</div>
+        </div>
+      </section>
+
+      <!-- TAB 1: LIFTS & MATERIALS -->
+      <section id="tab-lifts" class="tab-panel space-y-4">
+        <div id="liftsStatsGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+          <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500">مجموع النقلات</div>
+            <div id="statTotalLifts" class="text-2xl font-black text-slate-900 mt-0.5 num">0</div>
+          </div>
+          <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500">إجمالي البلوك</div>
+            <div id="statTotalBlocks" class="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 num">0</div>
+            <div class="text-[11px] text-slate-400">بلوكة</div>
+          </div>
+          <div class="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500">إجمالي الرمل</div>
+            <div id="statTotalSand" class="text-xl font-black text-sky-600 mt-0.5 num">0.00</div>
+            <div id="statTotalSandLiters" class="text-[11px] text-slate-400 num">0 لتر مكعب</div>
+          </div>
+          <div id="statLiftRevCard" class="col-span-3 sm:col-span-1 bg-white rounded-2xl p-3 border border-slate-200 shadow-sm">
+            <div class="text-xs text-slate-500">قيمة النقلات (للمدير)</div>
+            <div id="statLiftRevenue" class="text-lg font-black text-emerald-600 mt-0.5 num">0 ل.س</div>
+            <div id="statLiftRevenueUsd" class="text-[11px] text-slate-400 num">$0</div>
+          </div>
+        </div>
+
+        <div id="quickLiftCard" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">تسجيل نقلة بكبسة واحدة</h3>
+              <p class="text-xs text-slate-500">اكبس الصنف للتسجيل الفوري، أو خصّص الأزرار الـ 6 على مزاجك</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="btnEditPresets" class="tap-btn bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1">
+                <i data-lucide="settings-2" class="w-4 h-4"></i>
+                <span>تعديل الأزرار</span>
+              </button>
+              <button id="btnCustomLift" class="tap-btn bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>نقلة مخصصة</span>
+              </button>
+            </div>
+          </div>
+          <div id="quickLiftGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-extrabold text-slate-900 text-base">سجل النقلات (قابل للتعديل الفوري)</h3>
+            <span id="liftsCountBadge" class="text-xs bg-slate-100 text-slate-600 font-bold px-2.5 py-1 rounded-full num">0 نقلة</span>
+          </div>
+          <div id="liftsList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- TAB 2: SIMPLIFIED EXPENSES -->
+      <section id="tab-expenses" class="tab-panel hidden space-y-4">
+        <div id="expensesCard" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base">المصاريف والمشتريات</h3>
+              <p class="text-xs text-slate-500">1) اختر التصنيف &nbsp;←&nbsp; 2) اضغط اسم البند وأدخل المبلغ ببساطة</p>
+            </div>
+            <button id="btnAddCategory" class="tap-btn bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3 py-2 rounded-xl flex items-center gap-1 shadow-sm">
+              <i data-lucide="folder-plus" class="w-4 h-4"></i>
+              <span>تصنيف جديد</span>
+            </button>
+          </div>
+          <div id="expenseFoldersGrid" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"></div>
+          <div id="activeFolderPanel" class="bg-slate-50 rounded-2xl p-4 border border-slate-200 space-y-3"></div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-extrabold text-slate-900 text-base">المصاريف المسجّلة</h3>
+            <span id="expensesTotalBadge" class="text-xs bg-rose-50 text-rose-700 font-extrabold px-2.5 py-1 rounded-full num">0 ل.س</span>
+          </div>
+          <div id="expensesList" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- TAB 3: WORKERS & SUPERVISOR ACCOUNT -->
+      <section id="tab-workers" class="tab-panel hidden space-y-4">
+        <div id="workersCard" class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h3 class="font-extrabold text-slate-900 text-base" id="workersHeaderTitle">فريق العمال وحساب المراقب</h3>
+              <p class="text-xs text-slate-500" id="workersHeaderSub">نسبة % أو أجر ثابت لكل عامل، مع تتبع حساب المراقب والقبض الأسبوعي</p>
+            </div>
+            <button id="btnAddWorker" class="tap-btn bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5">
+              <i data-lucide="user-plus" class="w-4 h-4"></i>
+              <span>إضافة عامل</span>
+            </button>
+          </div>
+          <div id="workersList" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- TAB 4: EXECUTIVE SUMMARY, SITE LIFECYCLE & LIVE MONITOR -->
+      <section id="tab-summary" class="tab-panel hidden space-y-4">
+        <!-- Supervisor Simple Daily Summary -->
+        <div id="supervisorSummaryView" class="hidden bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-extrabold text-slate-900 text-base">ملخص عمل ورشتي</h3>
+          <div id="supSummaryBody" class="space-y-2 text-sm"></div>
+        </div>
+
+        <!-- Admin Full Control Panel -->
+        <div id="adminSummaryView" class="space-y-4">
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="font-extrabold text-slate-900 text-base">إدارة ومراقبة المحاضر المباشرة</h3>
+                <p class="text-xs text-slate-500">اضغط المحضر للمراقبة، أو اختر إتمام/أرشفة أو حذف المحضر</p>
+              </div>
+              <button id="btnAddSite" class="tap-btn bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-extrabold px-3.5 py-2 rounded-xl flex items-center gap-1">
+                <i data-lucide="building-2" class="w-4 h-4"></i>
+                <span>محضر جديد</span>
+              </button>
+            </div>
+            <div id="activeSitesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+
+            <!-- Archived / Completed Sites at Bottom -->
+            <div id="completedSitesWrapper" class="hidden pt-3 border-t border-slate-200 space-y-2">
+              <h4 class="text-xs font-extrabold text-emerald-700 flex items-center gap-1.5">
+                <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                <span>المحاضر المنتهية (تم الإنجاز)</span>
+              </h4>
+              <div id="completedSitesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5"></div>
+            </div>
+          </div>
+
+          <!-- Unified Financial Summary & Partial Calculator -->
+          <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="font-extrabold text-slate-900 text-base">المحصلة النهائية والحسبة الجزئية</h3>
+                <p class="text-xs text-slate-500">أدخل سعر الصرف واختر الحسبة الكاملة أو الجزئية</p>
+              </div>
+              <button id="btnDailyReport" class="tap-btn bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>تقرير تلغرام اليومي</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">نطاق الحساب</label>
+                <select id="summarySiteFilter" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">نوع الحسبة</label>
+                <select id="summaryScopeFilter" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold"></select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">سعر صرف الدولار (ل.س)</label>
+                <input id="summaryRateInput" type="number" min="100" step="100" class="w-full bg-white border border-amber-400 rounded-xl px-3 py-2 text-xs font-extrabold num" />
+              </div>
+            </div>
+
+            <div id="summaryKpiGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5"></div>
+
+            <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200">
+              <div class="text-xs font-extrabold text-slate-700 mb-2">التوزيع المالي (بالليرة السورية الموحّدة)</div>
+              <div class="relative h-64">
+                <canvas id="financeChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Interactive Guided Tour Floating Card -->
+  <div id="tourBanner" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 hidden max-w-md w-[94%]">
+    <div class="bg-slate-900 text-white rounded-2xl p-4 shadow-2xl border-2 border-amber-400 space-y-2.5">
+      <div class="flex items-center justify-between">
+        <span id="tourStepBadge" class="text-[11px] bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-md num">1 / 5</span>
+        <button id="btnTourClose" class="text-slate-400 hover:text-white text-xs font-bold">إغلاق الجولة ✕</button>
+      </div>
+      <h4 id="tourTitle" class="font-extrabold text-sm text-amber-300"></h4>
+      <p id="tourDesc" class="text-xs text-slate-200 leading-relaxed"></p>
+      <div class="flex items-center justify-between pt-1">
+        <button id="btnTourPrev" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-1.5 rounded-xl">السابق</button>
+        <button id="btnTourNext" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold px-4 py-1.5 rounded-xl">التالي</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Undo Toast -->
+  <div id="toastBar" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 hidden max-w-md w-[92%]">
+    <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 text-xs sm:text-sm font-bold">
+        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0"></i>
+        <span id="toastMsg">تم الحفظ</span>
+      </div>
+      <button id="toastUndoBtn" class="hidden bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-xl shrink-0">تراجع</button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav id="bottomNav" class="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-slate-200 z-40 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <div class="max-w-5xl mx-auto grid grid-cols-4 gap-1 px-2 py-1.5">
+      <button data-tab="lifts" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-amber-600 bg-amber-50 font-extrabold">
+        <i data-lucide="arrow-up-down" class="w-5 h-5"></i>
+        <span class="text-[11px] mt-0.5">النقلات</span>
+      </button>
+      <button data-tab="expenses" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 font-bold">
+        <i data-lucide="wallet" class="w-5 h-5"></i>
+        <span class="text-[11px] mt-0.5">المصاريف</span>
+      </button>
+      <button data-tab="workers" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 font-bold">
+        <i data-lucide="hard-hat" class="w-5 h-5"></i>
+        <span class="text-[11px] mt-0.5">العمال</span>
+      </button>
+      <button data-tab="summary" class="nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 font-bold">
+        <i data-lucide="pie-chart" class="w-5 h-5"></i>
+        <span class="text-[11px] mt-0.5" id="navSummaryLabel">الإدارة والمحصلة</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Reusable Modal -->
+  <div id="appModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-50 hidden items-center justify-center p-3">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[88vh] flex flex-col overflow-hidden border border-slate-200">
+      <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
+        <h3 id="modalTitle" class="font-extrabold text-slate-900 text-base">عنوان</h3>
+        <button id="modalCloseBtn" class="w-8 h-8 rounded-full bg-slate-200/70 hover:bg-slate-300 flex items-center justify-center text-slate-700">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="modalBody" class="p-5 overflow-y-auto space-y-3 text-sm"></div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. PRODUCTION CONFIG: TELEGRAM IDS & FIREBASE REALTIME DATABASE
+    // =========================================================================
+    const OWNER_TG_ID = 5205216077;        // المالك والمطور
+    const MANAGER_TG_ID = 8114544290;      // المدير العام (أخوك)
+    const ADMIN_IDS = [OWNER_TG_ID, MANAGER_TG_ID];
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDGLKak2YjqanYswv20icMxXpvsTLPBM8o",
+      authDomain: "rafea-pro.firebaseapp.com",
+      databaseURL: "https://rafea-pro-default-rtdb.firebaseio.com",
+      projectId: "rafea-pro",
+      storageBucket: "rafea-pro.firebasestorage.app",
+      messagingSenderId: "263615175740",
+      appId: "1:263615175740:web:11532db31b30e17b783739"
+    };
+
+    const STORAGE_KEY = 'rafea_pro_prod_cache_v1';
+    const DB_PATH = 'rafea_pro_data_v1';
+
+    let dbRef = null;
+    let firebaseReady = false;
+    let isRemoteUpdate = false;
+
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        dbRef = firebase.database().ref(DB_PATH);
+        firebaseReady = true;
+      }
+    } catch (err) {
+      firebaseReady = false;
+    }
+
+    // Telegram Mini App Detection
+    let tgUser = null;
+    let inTelegram = false;
+    try {
+      if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+        inTelegram = true;
+      }
+    } catch (e) {}
+
+    // =========================================================================
+    // 2. CLEAN INITIAL DATA STRUCTURE (ZERO FAKE NUMBERS)
+    // =========================================================================
+    const DEFAULT_PRESETS = [
+      { id: 'p_1', label: 'بلوك 15', icon: '🧱', qty: 45, unit: 'بلوكة', price: 35000, currency: 'SYP', direction: 'تطليع', color: 'amber' },
+      { id: 'p_2', label: 'رمل', icon: '⏳', qty: 500, unit: 'لتر مكعب', price: 40000, currency: 'SYP', direction: 'تطليع', color: 'sky' },
+      { id: 'p_3', label: 'إسمنت', icon: '🏗️', qty: 10, unit: 'كيس', price: 30000, currency: 'SYP', direction: 'تطليع', color: 'slate' },
+      { id: 'p_4', label: 'بحص', icon: '🪨', qty: 500, unit: 'لتر مكعب', price: 40000, currency: 'SYP', direction: 'تطليع', color: 'indigo' },
+      { id: 'p_5', label: 'طينة', icon: '🪣', qty: 300, unit: 'لتر مكعب', price: 25000, currency: 'SYP', direction: 'تطليع', color: 'emerald' },
+      { id: 'p_6', label: 'تنزيل أنقاض', icon: '⬇️', qty: 1, unit: 'نقلة', price: 20000, currency: 'SYP', direction: 'تنزيل', color: 'rose' }
+    ];
+
+    const DEFAULT_CATEGORIES = [
+      { id: 'cat_food', name: 'الغدا والأكل', icon: '🥙', items: ['فلافل', 'شاي وماء', 'خبز'] },
+      { id: 'cat_gen', name: 'المولدة والوقود', icon: '⚡', items: ['مازوت', 'زيت محرك', 'صيانة مولدة'] },
+      { id: 'cat_crane', name: 'الرافعة والصيانة', icon: '🔧', items: ['تشحيم وكبل', 'كهربائي'] }
+    ];
+
+    function makeDefaultSite(id, name, supervisor, ownerName, supervisorTgId = '') {
+      return {
+        id,
+        name,
+        supervisor,
+        ownerName: ownerName || 'غير محدد',
+        supervisorTgId: String(supervisorTgId || ''),
+        completed: false,
+        completedAt: '',
+        presets: JSON.parse(JSON.stringify(DEFAULT_PRESETS)),
+        deposits: [],
+        lifts: [],
+        categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
+        expenses: [],
+        workers: [
+          {
+            id: uid('w_sup'),
+            name: supervisor,
+            isSupervisor: true,
+            present: true,
+            payType: 'fixed_day',
+            payValue: 0,
+            currency: 'SYP',
+            daysWorked: 0,
+            paidSyp: 0,
+            paidUsd: 0
+          }
+        ]
+      };
+    }
+
+    function uid(prefix) {
+      return prefix + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    const DEFAULT_CLOUD_DATA = {
+      exchangeRate: 14500,
+      auditLog: [],
+      sites: [
+        makeDefaultSite('site_1', 'محضر 1', 'أبو أحمد', 'صاحب المحضر 1', '')
+      ]
+    };
+
+    // Local UI State + Synced Cloud Data
+    let cloudData = loadLocalCache();
+    let ui = {
+      role: 'admin',           // 'admin' | 'supervisor' | 'unknown'
+      assignedSiteId: 'site_1',
+      activeSiteId: 'site_1',
+      activeTab: 'lifts',
+      activeFolderId: 'cat_food',
+      summarySiteFilter: 'ALL',
+      summaryScopeFilter: 'ALL',
+      lastLiftTimestamp: 0,
+      tourIndex: -1
+    };
+
+    let undoAction = null;
+    let toastTimer = null;
+    let financeChartInstance = null;
+
+    function loadLocalCache() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.sites) && parsed.sites.length > 0) return normalizeCloud(parsed);
+        }
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(DEFAULT_CLOUD_DATA));
+    }
+
+    function normalizeCloud(data) {
+      const d = data || {};
+      d.exchangeRate = Number(d.exchangeRate) || 14500;
+      d.auditLog = Array.isArray(d.auditLog) ? d.auditLog : [];
+      d.sites = Array.isArray(d.sites) && d.sites.length > 0 ? d.sites : [makeDefaultSite('site_1', 'محضر 1', 'أبو أحمد', 'غير محدد', '')];
+      d.sites.forEach(s => {
+        s.presets = Array.isArray(s.presets) && s.presets.length ? s.presets : JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+        s.deposits = Array.isArray(s.deposits) ? s.deposits : [];
+        s.lifts = Array.isArray(s.lifts) ? s.lifts : [];
+        s.categories = Array.isArray(s.categories) && s.categories.length ? s.categories : JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+        s.categories.forEach(c => { c.items = Array.isArray(c.items) ? c.items : []; });
+        s.expenses = Array.isArray(s.expenses) ? s.expenses : [];
+        s.workers = Array.isArray(s.workers) ? s.workers : [];
+        s.ownerName = s.ownerName || 'غير محدد';
+        s.supervisorTgId = String(s.supervisorTgId || '');
+        s.completed = Boolean(s.completed);
+      });
+      return d;
+    }
+
+    function saveAndSync() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData)); } catch (e) {}
+      if (firebaseReady && dbRef && !isRemoteUpdate) {
+        dbRef.set(cloudData).catch(() => {
+          setSyncIndicator(false, 'محفوظ محلياً');
+        });
+      }
+    }
+
+    function setSyncIndicator(online, text) {
+      const pill = document.getElementById('syncStatusPill');
+      const dot = document.getElementById('netDot');
+      const lbl = document.getElementById('netLabel');
+      if (!pill) return;
+      if (online) {
+        pill.className = 'px-2.5 py-1 rounded-lg font-bold bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5';
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
+      } else {
+        pill.className = 'px-2.5 py-1 rounded-lg font-bold bg-amber-600/25 text-amber-200 border border-amber-500/40 flex items-center gap-1.5';
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
+      }
+      lbl.textContent = text;
+    }
+
+    function resolveUserRole() {
+      if (!inTelegram || !tgUser) {
+        // Browser preview fallback: show role switcher for testing
+        document.getElementById('devRoleSwitch').classList.remove('hidden');
+        return;
+      }
+      const id = Number(tgUser.id);
+      if (ADMIN_IDS.includes(id)) {
+        ui.role = 'admin';
+        // Owner can also test supervisor view if desired
+        if (id === OWNER_TG_ID) document.getElementById('devRoleSwitch').classList.remove('hidden');
+        return;
+      }
+      const matchedSite = cloudData.sites.find(s => String(s.supervisorTgId).trim() === String(id));
+      if (matchedSite) {
+        ui.role = 'supervisor';
+        ui.assignedSiteId = matchedSite.id;
+        ui.activeSiteId = matchedSite.id;
+      } else {
+        ui.role = 'unknown';
+      }
+    }
+
+    // Start Live Firebase Listener
+    if (firebaseReady && dbRef) {
+      firebase.database().ref('.info/connected').on('value', snap => {
+        if (snap.val() === true) setSyncIndicator(true, 'متصل مباشر');
+        else setSyncIndicator(false, 'بدون نت (حفظ محلي)');
+      });
+
+      dbRef.on('value', snap => {
+        const val = snap.val();
+        if (val) {
+          isRemoteUpdate = true;
+          cloudData = normalizeCloud(val);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData)); } catch (e) {}
+          resolveUserRole();
+          renderAll(false);
+          isRemoteUpdate = false;
+        } else {
+          // Initialize database cleanly on first launch
+          dbRef.set(cloudData).catch(() => {});
+        }
+      });
+    }
+
+    // =========================================================================
+    // 3. HELPERS & MATH
+    // =========================================================================
+    function toSyp(amount, currency) {
+      const val = Number(amount) || 0;
+      return currency === 'USD' ? val * (Number(cloudData.exchangeRate) || 14500) : val;
+    }
+    function toUsd(amount, currency) {
+      const val = Number(amount) || 0;
+      const rate = Number(cloudData.exchangeRate) || 14500;
+      return currency === 'USD' ? val : (rate > 0 ? val / rate : 0);
+    }
+    function fmtNum(val) { return Math.round(Number(val) || 0).toLocaleString('en-US'); }
+    function fmtSyp(val) { return fmtNum(val) + ' ل.س'; }
+    function fmtUsd(val) { return '$' + (Math.round((Number(val) || 0) * 100) / 100).toLocaleString('en-US'); }
+    function fmtCurr(val, currency) { return currency === 'USD' ? fmtUsd(val) : fmtSyp(val); }
+
+    function nowTimeFull() {
+      const d = new Date();
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    }
+
+    function getActiveSite() {
+      if (ui.role === 'supervisor') {
+        return cloudData.sites.find(s => s.id === ui.assignedSiteId) || cloudData.sites[0];
+      }
+      return cloudData.sites.find(s => s.id === ui.activeSiteId) || cloudData.sites[0];
+    }
+
+    function logAudit(action, details, flag = 'normal') {
+      const site = getActiveSite();
+      const actor = ui.role === 'admin'
+        ? (tgUser && Number(tgUser.id) === OWNER_TG_ID ? 'المالك' : 'المدير العام')
+        : `المراقب (${site.supervisor})`;
+      cloudData.auditLog.unshift({
+        id: uid('aud'),
+        time: nowTimeFull(),
+        siteName: site.name,
+        actor,
+        action,
+        details,
+        flag
+      });
+      if (cloudData.auditLog.length > 150) cloudData.auditLog.pop();
+    }
+
+    function calcWorkerEarnedSyp(worker, site, liftRevSyp) {
+      const rev = liftRevSyp !== undefined ? liftRevSyp : site.lifts.reduce((s, l) => s + toSyp(l.price, l.currency), 0);
+      if (worker.payType === 'percent') return worker.present ? (rev * (Number(worker.payValue) || 0) / 100) : 0;
+      if (worker.payType === 'fixed_lift') return worker.present ? (site.lifts.length * toSyp(worker.payValue, worker.currency)) : 0;
+      return (Number(worker.daysWorked) || 0) * toSyp(worker.payValue, worker.currency);
+    }
+
+    function calcSiteMetrics(site) {
+      const liftRevSyp = site.lifts.reduce((s, l) => s + toSyp(l.price, l.currency), 0);
+      const depositsSyp = site.deposits.reduce((s, d) => s + toSyp(d.amount, d.currency), 0);
+      const expensesSyp = site.expenses.reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+
+      let workerEarnedSyp = 0;
+      let workerPaidSyp = 0;
+      site.workers.forEach(w => {
+        workerEarnedSyp += calcWorkerEarnedSyp(w, site, liftRevSyp);
+        workerPaidSyp += (Number(w.paidSyp) || 0) + toSyp(w.paidUsd || 0, 'USD');
+      });
+
+      const totalBlocks = site.lifts.filter(l => l.unit === 'بلوكة').reduce((s, l) => s + (Number(l.qty) || 0), 0);
+      const totalSandLiters = site.lifts.filter(l => l.unit === 'لتر مكعب').reduce((s, l) => s + (Number(l.qty) || 0), 0);
+      const totalSandM3 = totalSandLiters / 1000;
+      const pettySpentSyp = expensesSyp + workerPaidSyp;
+      const pettyBalanceSyp = depositsSyp - pettySpentSyp;
+      const netProfitSyp = liftRevSyp - workerEarnedSyp - expensesSyp;
+
+      return {
+        liftRevSyp, depositsSyp, expensesSyp, workerEarnedSyp, workerPaidSyp,
+        pettySpentSyp, pettyBalanceSyp, netProfitSyp, totalBlocks, totalSandLiters, totalSandM3
+      };
+    }
+
+    // =========================================================================
+    // 4. TOAST & MODAL
+    // =========================================================================
+    function showToast(message, onUndo = null) {
+      const bar = document.getElementById('toastBar');
+      document.getElementById('toastMsg').textContent = message;
+      undoAction = onUndo;
+      document.getElementById('toastUndoBtn').classList.toggle('hidden', !onUndo);
+      bar.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { bar.classList.add('hidden'); undoAction = null; }, onUndo ? 7000 : 3500);
+    }
+
+    function openModal(title, htmlContent) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalBody').innerHTML = htmlContent;
+      const m = document.getElementById('appModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeModal() {
+      const m = document.getElementById('appModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    // =========================================================================
+    // 5. RENDER PIPELINE
+    // =========================================================================
+    function renderAll(shouldSync = true) {
+      if (shouldSync) saveAndSync();
+
+      if (ui.role === 'unknown') {
+        document.getElementById('unassignedScreen').classList.remove('hidden');
+        document.getElementById('mainAppWrapper').classList.add('hidden');
+        document.getElementById('bottomNav').classList.add('hidden');
+        document.getElementById('unknownUserIdBox').textContent = tgUser ? String(tgUser.id) : '---';
+        lucide.createIcons();
+        return;
+      }
+
+      document.getElementById('unassignedScreen').classList.add('hidden');
+      document.getElementById('mainAppWrapper').classList.remove('hidden');
+      document.getElementById('bottomNav').classList.remove('hidden');
+
+      renderHeader();
+      renderSitePills();
+      renderTopCard();
+      renderLiftsTab();
+      renderExpensesTab();
+      renderWorkersTab();
+      renderSummaryTab();
+      renderNav();
+      lucide.createIcons();
+    }
+
+    function renderHeader() {
+      const isAdmin = ui.role === 'admin';
+      const site = getActiveSite();
+
+      document.getElementById('btnRoleAdmin').className = isAdmin
+        ? 'px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950'
+        : 'px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
+      document.getElementById('btnRoleSup').className = !isAdmin
+        ? 'px-2.5 py-1 rounded-lg font-bold transition bg-amber-500 text-slate-950'
+        : 'px-2.5 py-1 rounded-lg font-bold transition bg-slate-800 text-slate-200';
+
+      document.getElementById('roleBadge').textContent = isAdmin ? 'المدير العام' : `مراقب: ${site.supervisor}`;
+      const activeCount = cloudData.sites.filter(s => !s.completed).length;
+      document.getElementById('headerSubtitle').textContent = isAdmin
+        ? `${activeCount} محاضر نشطة • الأسعار والأرباح خاصة بك`
+        : `${site.name} • إدخال سريع ومباشر للمدير`;
+
+      document.getElementById('adminHeaderControls').classList.toggle('hidden', !isAdmin);
+      document.getElementById('headerRateVal').textContent = fmtNum(cloudData.exchangeRate);
+      document.getElementById('auditCountBadge').textContent = String(cloudData.auditLog.length);
+      document.getElementById('navSummaryLabel').textContent = isAdmin ? 'الإدارة والمحصلة' : 'ملخص اليوم';
+    }
+
+    function renderSitePills() {
+      const container = document.getElementById('sitePillsContainer');
+      if (ui.role === 'supervisor') {
+        const site = getActiveSite();
+        container.innerHTML = `<div class="text-xs bg-slate-800 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${site.name} (${site.supervisor})
+        </div>`;
+        return;
+      }
+      // Show active sites first, completed sites at the end
+      const ordered = [...cloudData.sites.filter(s => !s.completed), ...cloudData.sites.filter(s => s.completed)];
+      container.innerHTML = ordered.map(s => {
+        const active = s.id === ui.activeSiteId;
+        return `<button data-site-id="${s.id}" class="site-pill shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+          active ? 'bg-amber-500 text-slate-950 shadow' : (s.completed ? 'bg-slate-800/60 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-300 hover:bg-slate-700')
+        }">
+          <span class="w-2 h-2 rounded-full ${s.completed ? 'bg-emerald-400' : (active ? 'bg-slate-950' : 'bg-amber-400')}"></span>
+          <span>${s.name}</span>
+          ${s.completed ? '<span class="text-[10px]">✓</span>' : `<span class="opacity-70 text-[10px] num">(${s.lifts.length})</span>`}
+        </button>`;
+      }).join('');
+    }
+
+    function renderTopCard() {
+      const isAdmin = ui.role === 'admin';
+      const site = getActiveSite();
+      document.getElementById('pettyCashCard').classList.toggle('hidden', !isAdmin);
+      document.getElementById('supervisorSiteBanner').classList.toggle('hidden', isAdmin);
+
+      if (!isAdmin) {
+        document.getElementById('supSiteName').textContent = site.name;
+        document.getElementById('supTodayCount').textContent = String(site.lifts.length);
+        return;
+      }
+
+      const m = calcSiteMetrics(site);
+      document.getElementById('activeSiteTitle').textContent = site.name;
+      document.getElementById('activeSiteDoneBadge').classList.toggle('hidden', !site.completed);
+      document.getElementById('activeSiteStatusDot').className = site.completed
+        ? 'w-2.5 h-2.5 rounded-full bg-emerald-600'
+        : 'w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot';
+      document.getElementById('activeSiteMeta').textContent = `المستلم: ${site.supervisor} • صاحب المحضر: ${site.ownerName}`;
+
+      document.getElementById('pcReceivedSyp').textContent = fmtSyp(m.depositsSyp);
+      document.getElementById('pcReceivedUsd').textContent = fmtUsd(toUsd(m.depositsSyp, 'SYP'));
+      document.getElementById('pcSpentSyp').textContent = fmtSyp(m.pettySpentSyp);
+      document.getElementById('pcSpentUsd').textContent = fmtUsd(toUsd(m.pettySpentSyp, 'SYP'));
+      document.getElementById('pcBalanceSyp').textContent = fmtSyp(m.pettyBalanceSyp);
+      document.getElementById('pcBalanceUsd').textContent = fmtUsd(toUsd(m.pettyBalanceSyp, 'SYP'));
+
+      document.getElementById('pcBalanceBox').className = m.pettyBalanceSyp < 0
+        ? 'bg-rose-100 rounded-xl p-2.5 sm:p-3 border border-rose-300'
+        : 'bg-emerald-50/80 rounded-xl p-2.5 sm:p-3 border border-emerald-200';
+    }
+
+    function renderLiftsTab() {
+      const isAdmin = ui.role === 'admin';
+      const site = getActiveSite();
+      const m = calcSiteMetrics(site);
+
+      document.getElementById('statTotalLifts').textContent = fmtNum(site.lifts.length);
+      document.getElementById('statTotalBlocks').textContent = fmtNum(m.totalBlocks);
+      document.getElementById('statTotalSand').textContent = m.totalSandM3.toFixed(2) + ' م³';
+      document.getElementById('statTotalSandLiters').textContent = fmtNum(m.totalSandLiters) + ' لتر مكعب';
+
+      document.getElementById('statLiftRevCard').classList.toggle('hidden', !isAdmin);
+      document.getElementById('liftsStatsGrid').className = isAdmin
+        ? 'grid grid-cols-3 sm:grid-cols-4 gap-2.5'
+        : 'grid grid-cols-3 gap-2.5';
+      document.getElementById('statLiftRevenue').textContent = fmtSyp(m.liftRevSyp);
+      document.getElementById('statLiftRevenueUsd').textContent = fmtUsd(toUsd(m.liftRevSyp, 'SYP'));
+
+      const colorMap = {
+        amber: 'bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-950',
+        sky: 'bg-sky-50 hover:bg-sky-100 border-sky-200 text-sky-950',
+        slate: 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-900',
+        indigo: 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-950',
+        emerald: 'bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-950',
+        rose: 'bg-rose-50 hover:bg-rose-100 border-rose-200 text-rose-950'
+      };
+
+      document.getElementById('quickLiftGrid').innerHTML = site.presets.map(p => `
+        <button data-preset-id="${p.id}" class="quick-lift-btn tap-btn border-2 rounded-2xl p-3 text-right flex flex-col justify-between shadow-xs ${colorMap[p.color] || colorMap.slate}">
+          <div class="flex items-center justify-between w-full">
+            <span class="text-2xl">${p.icon}</span>
+            <span class="text-[11px] font-extrabold bg-white/80 px-2 py-0.5 rounded-lg border border-black/5 num">+1</span>
+          </div>
+          <div class="mt-2">
+            <div class="font-extrabold text-sm">${p.label}</div>
+            <div class="text-[11px] opacity-75 font-bold">
+              <span class="num">${p.qty}</span> ${p.unit}
+              ${isAdmin ? ` • <span class="num">${fmtCurr(p.price, p.currency)}</span>` : ''}
+            </div>
+          </div>
+        </button>
+      `).join('');
+
+      document.getElementById('liftsCountBadge').textContent = `${site.lifts.length} نقلة`;
+      const list = document.getElementById('liftsList');
+      if (site.lifts.length === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا توجد نقلات بعد — اضغط أي صنف من الأزرار أعلاه للبدء</div>`;
+        return;
+      }
+
+      list.innerHTML = [...site.lifts].reverse().map((l, idx) => `
+        <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200/70">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-7 h-7 rounded-lg bg-slate-900 text-amber-400 font-black text-xs flex items-center justify-center shrink-0 num">${site.lifts.length - idx}</span>
+            <div class="min-w-0">
+              <div class="font-extrabold text-sm text-slate-900 truncate">
+                ${l.material} <span class="text-xs font-bold text-slate-500">(<span class="num">${l.qty}</span> ${l.unit})</span>
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-2 flex-wrap">
+                <span>${l.direction}</span> • <span class="num">${l.time}</span>
+                ${isAdmin ? `• <span class="font-bold text-emerald-700 num">${fmtCurr(l.price, l.currency)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0">
+            <button data-edit-lift="${l.id}" class="edit-lift-btn p-2 rounded-lg bg-white border border-slate-200 hover:bg-amber-50 text-slate-600"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+            <button data-del-lift="${l.id}" class="del-lift-btn p-2 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-slate-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderExpensesTab() {
+      const site = getActiveSite();
+      if (!site.categories.some(c => c.id === ui.activeFolderId) && site.categories.length > 0) {
+        ui.activeFolderId = site.categories[0].id;
+      }
+
+      document.getElementById('expenseFoldersGrid').innerHTML = site.categories.map(cat => {
+        const active = cat.id === ui.activeFolderId;
+        const catTotalSyp = site.expenses.filter(e => e.categoryId === cat.id).reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+        return `
+          <button data-folder-id="${cat.id}" class="folder-btn tap-btn shrink-0 px-3.5 py-2.5 rounded-2xl border-2 text-right transition flex items-center gap-2 ${
+            active ? 'bg-slate-900 text-white border-amber-500 shadow' : 'bg-white text-slate-800 border-slate-200 hover:border-amber-300'
+          }">
+            <span class="text-lg">${cat.icon}</span>
+            <div>
+              <div class="font-extrabold text-xs sm:text-sm">${cat.name}</div>
+              <div class="text-[10px] font-bold num ${active ? 'text-amber-400' : 'text-slate-500'}">${fmtSyp(catTotalSyp)}</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      const activeCat = site.categories.find(c => c.id === ui.activeFolderId);
+      const panel = document.getElementById('activeFolderPanel');
+      if (!activeCat) {
+        panel.innerHTML = `<div class="text-center text-slate-400 text-xs py-4">أضف تصنيفاً جديداً للبدء</div>`;
+      } else {
+        panel.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="font-extrabold text-slate-900 text-sm">${activeCat.icon} اختر البند لإضافة تكلفته:</div>
+            <button data-add-item-cat="${activeCat.id}" class="add-cat-item-btn tap-btn text-xs font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 px-2.5 py-1.5 rounded-xl flex items-center gap-1">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>بند جديد</span>
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            ${activeCat.items.map(itemName => `
+              <button data-pick-cat="${activeCat.id}" data-pick-item="${itemName}" class="pick-exp-chip tap-btn bg-white hover:bg-rose-50 border-2 border-slate-200 hover:border-rose-300 text-slate-900 font-extrabold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-1.5">
+                <span>${itemName}</span>
+                <span class="text-rose-600 text-xs">+</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+      }
+
+      const totalExpSyp = site.expenses.reduce((s, e) => s + toSyp(e.amount, e.currency), 0);
+      document.getElementById('expensesTotalBadge').textContent = fmtSyp(totalExpSyp);
+      const list = document.getElementById('expensesList');
+      if (site.expenses.length === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا توجد مصاريف مسجّلة بعد — اضغط أي بند أعلاه لتسجيل تكلفته</div>`;
+        return;
+      }
+      // Protected expense/payment entries: delete only for accidental invoice (per user requirement!)
+      list.innerHTML = [...site.expenses].reverse().map(e => `
+        <div class="flex items-center justify-between gap-2 bg-slate-50 rounded-xl px-3 py-2.5 border border-slate-200/70">
+          <div>
+            <div class="font-extrabold text-sm text-slate-900">${e.itemName} <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold">${e.categoryName}</span></div>
+            <div class="text-[11px] text-slate-500 mt-0.5"><span class="num">${e.time}</span> • <strong class="text-rose-600 num">${fmtCurr(e.amount, e.currency)}</strong></div>
+          </div>
+          <button data-del-exp="${e.id}" class="del-exp-btn p-2 rounded-lg bg-white border border-slate-200 hover:bg-rose-50 text-slate-500 hover:text-rose-600" title="حذف فاتورة خاطئة">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function renderWorkersTab() {
+      const isAdmin = ui.role === 'admin';
+      const site = getActiveSite();
+      const m = calcSiteMetrics(site);
+
+      document.getElementById('workersHeaderTitle').textContent = isAdmin ? 'فريق العمال وحساب المراقب' : 'حضور العمال اليوم';
+      document.getElementById('workersHeaderSub').textContent = isAdmin
+        ? 'يشمل العمال والمراقب المستلم لتتبع ما دُفع له ونسبته أو أجره'
+        : 'حدّد العمال الحاضرين اليوم في الورشة بضغطة زر';
+
+      const list = document.getElementById('workersList');
+      if (site.workers.length === 0) {
+        list.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs sm:text-sm bg-slate-50 rounded-xl border border-dashed border-slate-300">لا يوجد عمال مضافون بعد — اضغط "إضافة عامل"</div>`;
+        return;
+      }
+
+      list.innerHTML = site.workers.map(w => {
+        const earnedSyp = calcWorkerEarnedSyp(w, site, m.liftRevSyp);
+        const paidSyp = (Number(w.paidSyp) || 0) + toSyp(w.paidUsd || 0, 'USD');
+        const remainSyp = earnedSyp - paidSyp;
+
+        let payDesc = w.payType === 'percent' ? `نسبة ${w.payValue}%` : (w.payType === 'fixed_lift' ? `${fmtCurr(w.payValue, w.currency)} / نقلة` : `${fmtCurr(w.payValue, w.currency)} / يوم`);
+
+        return `
+          <div class="bg-slate-50 rounded-2xl p-3.5 border ${w.isSupervisor ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200'} space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <button data-toggle-present="${w.id}" class="toggle-present-btn w-9 h-9 rounded-xl flex items-center justify-center font-black transition border-2 ${
+                  w.present ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-400 border-slate-300'
+                }">
+                  <i data-lucide="${w.present ? 'check' : 'minus'}" class="w-5 h-5"></i>
+                </button>
+                <div>
+                  <div class="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                    <span>${w.name}</span>
+                    ${w.isSupervisor ? '<span class="text-[10px] bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-full">مراقب المحضر</span>' : ''}
+                  </div>
+                  <div class="text-[11px] text-slate-500 font-bold">
+                    ${isAdmin ? `${payDesc} • ` : ''}أيام العمل: <span class="num">${w.daysWorked}</span>
+                  </div>
+                </div>
+              </div>
+              <span class="text-[11px] font-extrabold px-2.5 py-1 rounded-full ${w.present ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+                ${w.present ? 'حاضر اليوم' : 'غائب'}
+              </span>
+            </div>
+
+            ${isAdmin ? `
+              <div class="grid grid-cols-3 gap-2 text-center bg-white rounded-xl p-2 border border-slate-200/70">
+                <div>
+                  <div class="text-[10px] text-slate-500">المستحق</div>
+                  <div class="text-xs font-extrabold text-slate-900 num">${fmtSyp(earnedSyp)}</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-500">المدفوع له</div>
+                  <div class="text-xs font-extrabold text-sky-700 num">${fmtSyp(paidSyp)}</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-slate-500">المتبقي له</div>
+                  <div class="text-xs font-black num ${remainSyp > 0 ? 'text-amber-600' : 'text-emerald-600'}">${fmtSyp(remainSyp)}</div>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button data-pay-worker="${w.id}" class="pay-worker-btn tap-btn flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-2.5 rounded-xl">تسجيل دفعة / قبض</button>
+                <button data-edit-worker="${w.id}" class="edit-worker-btn tap-btn bg-white hover:bg-amber-50 border border-slate-300 text-slate-800 text-xs font-bold py-2 px-3 rounded-xl">تعديل</button>
+                <button data-stmt-worker="${w.id}" class="stmt-worker-btn tap-btn bg-slate-900 hover:bg-slate-800 text-amber-400 text-xs font-bold py-2 px-3 rounded-xl">كشف حساب</button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSummaryTab() {
+      const isAdmin = ui.role === 'admin';
+      document.getElementById('supervisorSummaryView').classList.toggle('hidden', isAdmin);
+      document.getElementById('adminSummaryView').classList.toggle('hidden', !isAdmin);
+
+      if (!isAdmin) {
+        const site = getActiveSite();
+        const m = calcSiteMetrics(site);
+        const presentCount = site.workers.filter(w => w.present).length;
+        document.getElementById('supSummaryBody').innerHTML = `
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">إجمالي النقلات</div><div class="text-xl font-black text-slate-900 num">${site.lifts.length}</div></div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">العمال الحاضرون</div><div class="text-xl font-black text-emerald-700 num">${presentCount} / ${site.workers.length}</div></div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">مجموع البلوك</div><div class="text-lg font-black text-amber-600 num">${fmtNum(m.totalBlocks)}</div></div>
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200"><div class="text-xs text-slate-500">مصاريفك المسجّلة</div><div class="text-lg font-black text-rose-600 num">${fmtSyp(m.expensesSyp)}</div></div>
+          </div>
+        `;
+        return;
+      }
+
+      const activeSites = cloudData.sites.filter(s => !s.completed);
+      const completedSites = cloudData.sites.filter(s => s.completed);
+
+      const renderSiteCard = (s) => {
+        const m = calcSiteMetrics(s);
+        const selected = s.id === ui.activeSiteId;
+        return `
+          <div class="rounded-2xl p-3 border-2 space-y-2.5 transition ${
+            selected ? 'bg-amber-50/60 border-amber-500' : (s.completed ? 'bg-emerald-50/40 border-emerald-200' : 'bg-slate-50 border-slate-200')
+          }">
+            <div class="flex items-start justify-between gap-2">
+              <button data-jump-site="${s.id}" class="jump-site-btn text-right flex-1">
+                <div class="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                  <span>${s.name}</span>
+                  ${s.completed ? '<span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full">خالص ✓</span>' : ''}
+                </div>
+                <div class="text-[11px] text-slate-600 mt-0.5">المستلم: <strong>${s.supervisor}</strong> • الصاحب: <strong>${s.ownerName}</strong></div>
+                <div class="text-[11px] text-slate-500 mt-0.5 num">${s.lifts.length} نقلة • العهدة الباقية: <strong class="${m.pettyBalanceSyp < 0 ? 'text-rose-600' : 'text-emerald-700'}">${fmtSyp(m.pettyBalanceSyp)}</strong></div>
+              </button>
+            </div>
+            <div class="flex items-center gap-1.5 pt-2 border-t border-slate-200/70">
+              <button data-complete-site="${s.id}" class="complete-site-btn tap-btn flex-1 ${s.completed ? 'bg-slate-200 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} text-[11px] font-extrabold py-1.5 px-2 rounded-xl">
+                ${s.completed ? 'عرض الملخص / إعادة فتح' : 'إتمام المحضر ✓'}
+              </button>
+              <button data-delete-site="${s.id}" class="delete-site-btn tap-btn bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 text-[11px] font-bold py-1.5 px-2.5 rounded-xl">
+                حذف
+              </button>
+            </div>
+          </div>
+        `;
+      };
+
+      document.getElementById('activeSitesGrid').innerHTML = activeSites.length
+        ? activeSites.map(renderSiteCard).join('')
+        : `<div class="col-span-full text-center py-4 text-xs text-slate-400">لا توجد محاضر نشطة حالياً — اضغط «محضر جديد»</div>`;
+
+      document.getElementById('completedSitesWrapper').classList.toggle('hidden', completedSites.length === 0);
+      document.getElementById('completedSitesGrid').innerHTML = completedSites.map(renderSiteCard).join('');
+
+      // Filters
+      const siteSel = document.getElementById('summarySiteFilter');
+      const scopeSel = document.getElementById('summaryScopeFilter');
+      document.getElementById('summaryRateInput').value = cloudData.exchangeRate;
+
+      siteSel.innerHTML = `<option value="ALL" ${ui.summarySiteFilter === 'ALL' ? 'selected' : ''}>جميع المحاضر (${cloudData.sites.length})</option>` +
+        cloudData.sites.map(s => `<option value="${s.id}" ${ui.summarySiteFilter === s.id ? 'selected' : ''}>${s.name}${s.completed ? ' (خالص)' : ''}</option>`).join('');
+
+      const targetSites = ui.summarySiteFilter === 'ALL' ? cloudData.sites : cloudData.sites.filter(s => s.id === ui.summarySiteFilter);
+      const catNames = new Set();
+      targetSites.forEach(s => s.categories.forEach(c => catNames.add(c.name)));
+
+      scopeSel.innerHTML = `
+        <option value="ALL" ${ui.summaryScopeFilter === 'ALL' ? 'selected' : ''}>المحصلة الشاملة (الكل)</option>
+        <option value="LIFTS" ${ui.summaryScopeFilter === 'LIFTS' ? 'selected' : ''}>حسبة جزئية: النقلات فقط</option>
+        <option value="WORKERS" ${ui.summaryScopeFilter === 'WORKERS' ? 'selected' : ''}>حسبة جزئية: العمال فقط</option>
+        <option value="EXPENSES" ${ui.summaryScopeFilter === 'EXPENSES' ? 'selected' : ''}>حسبة جزئية: كل المصاريف</option>
+        ${[...catNames].map(cn => `<option value="CAT:${cn}" ${ui.summaryScopeFilter === 'CAT:' + cn ? 'selected' : ''}>حسبة جزئية: تصنيف (${cn})</option>`).join('')}
+      `;
+
+      let totalLiftRev = 0, totalWorkers = 0, totalExpenses = 0, totalPartialCat = 0;
+      targetSites.forEach(s => {
+        const m = calcSiteMetrics(s);
+        totalLiftRev += m.liftRevSyp;
+        totalWorkers += m.workerEarnedSyp;
+        totalExpenses += m.expensesSyp;
+        if (ui.summaryScopeFilter.startsWith('CAT:')) {
+          const tc = ui.summaryScopeFilter.slice(4);
+          totalPartialCat += s.expenses.filter(e => e.categoryName === tc).reduce((sum, e) => sum + toSyp(e.amount, e.currency), 0);
+        }
+      });
+      const netProfit = totalLiftRev - totalWorkers - totalExpenses;
+
+      const kpiGrid = document.getElementById('summaryKpiGrid');
+      if (ui.summaryScopeFilter !== 'ALL') {
+        const val = ui.summaryScopeFilter.startsWith('CAT:') ? totalPartialCat
+          : ui.summaryScopeFilter === 'LIFTS' ? totalLiftRev
+          : ui.summaryScopeFilter === 'WORKERS' ? totalWorkers : totalExpenses;
+        const lbl = ui.summaryScopeFilter.startsWith('CAT:') ? `الحسبة الجزئية لتصنيف: ${ui.summaryScopeFilter.slice(4)}`
+          : ui.summaryScopeFilter === 'LIFTS' ? 'الحسبة الجزئية: إجمالي النقلات'
+          : ui.summaryScopeFilter === 'WORKERS' ? 'الحسبة الجزئية: إجمالي العمال' : 'الحسبة الجزئية: إجمالي المصاريف';
+        kpiGrid.innerHTML = `<div class="col-span-2 sm:col-span-4 bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-center">
+          <div class="text-xs font-bold text-amber-800">${lbl}</div>
+          <div class="text-2xl font-black text-slate-900 mt-1 num">${fmtSyp(val)}</div>
+          <div class="text-sm font-extrabold text-amber-700 num">${fmtUsd(toUsd(val, 'SYP'))}</div>
+        </div>`;
+      } else {
+        kpiGrid.innerHTML = `
+          <div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-200"><div class="text-[11px] text-emerald-700 font-bold">إجمالي قيمة النقلات</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalLiftRev)}</div><div class="text-[11px] text-emerald-600 font-bold num">${fmtUsd(toUsd(totalLiftRev, 'SYP'))}</div></div>
+          <div class="bg-sky-50 rounded-2xl p-3 border border-sky-200"><div class="text-[11px] text-sky-700 font-bold">حصة وأجور العمال</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalWorkers)}</div><div class="text-[11px] text-sky-600 font-bold num">${fmtUsd(toUsd(totalWorkers, 'SYP'))}</div></div>
+          <div class="bg-rose-50 rounded-2xl p-3 border border-rose-200"><div class="text-[11px] text-rose-700 font-bold">المصاريف (مولدة/أكل/صيانة)</div><div class="text-sm sm:text-base font-black text-slate-900 mt-0.5 num">${fmtSyp(totalExpenses)}</div><div class="text-[11px] text-rose-600 font-bold num">${fmtUsd(toUsd(totalExpenses, 'SYP'))}</div></div>
+          <div class="bg-slate-900 text-white rounded-2xl p-3 border border-amber-500/50"><div class="text-[11px] text-amber-400 font-bold">المحصلة الصافية لصاحب الشغل</div><div class="text-sm sm:text-base font-black mt-0.5 num">${fmtSyp(netProfit)}</div><div class="text-[11px] text-amber-300 font-bold num">${fmtUsd(toUsd(netProfit, 'SYP'))}</div></div>
+        `;
+      }
+
+      renderChart(totalLiftRev, totalWorkers, totalExpenses, Math.max(0, netProfit));
+    }
+
+    function renderChart(rev, workers, expenses, net) {
+      const ctx = document.getElementById('financeChart');
+      if (!ctx || typeof Chart === 'undefined') return;
+      if (financeChartInstance) financeChartInstance.destroy();
+      financeChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['قيمة النقلات', 'أجور العمال', 'المصاريف', 'المحصلة الصافية'],
+          datasets: [{ data: [Math.round(rev), Math.round(workers), Math.round(expenses), Math.round(net)], backgroundColor: ['#10b981', '#0ea5e9', '#f43f5e', '#f59e0b'], borderRadius: 10 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true }, x: { ticks: { font: { family: 'Tajawal', weight: 'bold' } } } }
+        }
+      });
+    }
+
+    function renderNav() {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+      const activePanel = document.getElementById('tab-' + ui.activeTab);
+      if (activePanel) activePanel.classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        const isCurrent = b.dataset.tab === ui.activeTab;
+        b.className = isCurrent
+          ? 'nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-amber-600 bg-amber-50 font-extrabold'
+          : 'nav-btn flex flex-col items-center justify-center py-1.5 rounded-xl text-slate-500 font-bold';
+      });
+    }
+
+    // =========================================================================
+    // 6. NEW & CORE MODALS: SEARCH, SITE META, OWNER STATEMENT, COMPLETE/DELETE
+    // =========================================================================
+    function openAdminSearchModal() {
+      openModal('بحث في السجلات (النقلات والدفع)', `
+        <div class="space-y-3">
+          <input id="adminSearchInput" type="text" placeholder="ابحث باسم مادة، مصروف، محضر، ملاحظة..." class="w-full border-2 border-sky-300 rounded-xl px-3 py-2.5 text-sm font-bold focus:outline-none focus:border-sky-500" autofocus />
+          <div id="adminSearchResults" class="space-y-2 max-h-80 overflow-y-auto">
+            <div class="text-center text-xs text-slate-400 py-4">اكتب أي كلمة للبحث في كل النقلات والمصاريف والمقبوضات</div>
+          </div>
+        </div>
+      `);
+      document.getElementById('adminSearchInput').addEventListener('input', e => {
+        const q = e.target.value.trim().toLowerCase();
+        const resBox = document.getElementById('adminSearchResults');
+        if (!q) {
+          resBox.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">اكتب أي كلمة للبحث</div>`;
+          return;
+        }
+        const matches = [];
+        cloudData.sites.forEach(s => {
+          s.lifts.forEach(l => {
+            if (`${s.name} ${l.material} ${l.direction} ${l.unit}`.toLowerCase().includes(q)) {
+              matches.push({ tag: 'نقلة', color: 'amber', site: s.name, title: `${l.material} (${l.qty} ${l.unit})`, val: fmtCurr(l.price, l.currency), time: l.time });
+            }
+          });
+          s.expenses.forEach(ex => {
+            if (`${s.name} ${ex.itemName} ${ex.categoryName}`.toLowerCase().includes(q)) {
+              matches.push({ tag: 'مصروف', color: 'rose', site: s.name, title: `${ex.itemName} (${ex.categoryName})`, val: '-' + fmtCurr(ex.amount, ex.currency), time: ex.time });
+            }
+          });
+          s.deposits.forEach(dep => {
+            if (`${s.name} ${dep.note}`.toLowerCase().includes(q)) {
+              matches.push({ tag: 'مقبوض', color: 'emerald', site: s.name, title: dep.note, val: '+' + fmtCurr(dep.amount, dep.currency), time: dep.time });
+            }
+          });
+        });
+        if (matches.length === 0) {
+          resBox.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">لا توجد نتائج مطابقة لـ "${e.target.value}"</div>`;
+          return;
+        }
+        resBox.innerHTML = matches.map(m => `
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">
+                <span class="px-1.5 py-0.5 rounded bg-${m.color}-100 text-${m.color}-800 text-[10px]">${m.tag}</span> ${m.title}
+              </div>
+              <div class="text-[11px] text-slate-500">${m.site} • <span class="num">${m.time}</span></div>
+            </div>
+            <div class="font-black text-xs num text-slate-800">${m.val}</div>
+          </div>
+        `).join('');
+      });
+    }
+
+    function openEditSiteMetaModal() {
+      const site = getActiveSite();
+      openModal('تعديل بيانات المحضر', `
+        <form id="editSiteMetaForm" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">اسم المحضر</label>
+            <input name="name" required value="${site.name}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">اسم المراقب المستلم</label>
+            <input name="supervisor" required value="${site.supervisor}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">رقم Telegram ID للمراقب (لربط حسابه تلقائياً)</label>
+            <input name="supervisorTgId" value="${site.supervisorTgId}" placeholder="مثال: 5123456789" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">اسم صاحب المحضر</label>
+            <input name="ownerName" required value="${site.ownerName}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" />
+          </div>
+          <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ البيانات</button>
+        </form>
+      `);
+      document.getElementById('editSiteMetaForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        site.name = fd.get('name');
+        site.supervisor = fd.get('supervisor');
+        site.supervisorTgId = String(fd.get('supervisorTgId') || '').trim();
+        site.ownerName = fd.get('ownerName');
+        const supW = site.workers.find(w => w.isSupervisor);
+        if (supW) supW.name = site.supervisor;
+        logAudit('تعديل بيانات محضر', `${site.name} | المستلم: ${site.supervisor} | الصاحب: ${site.ownerName}`, 'edit');
+        closeModal(); renderAll(); showToast('تم تحديث بيانات المحضر');
+      });
+    }
+
+    // Client-Facing Final Statement for Site Owner (ONLY lifted work + final amount!)
+    function openOwnerStatementModal(targetSite = null) {
+      const site = targetSite || getActiveSite();
+      const m = calcSiteMetrics(site);
+
+      // Group lifts by material & unit
+      const grouped = {};
+      site.lifts.forEach(l => {
+        const key = `${l.material} (${l.unit})`;
+        if (!grouped[key]) grouped[key] = { count: 0, qty: 0, revSyp: 0 };
+        grouped[key].count += 1;
+        grouped[key].qty += Number(l.qty) || 0;
+        grouped[key].revSyp += toSyp(l.price, l.currency);
+      });
+
+      const lines = Object.keys(grouped).length
+        ? Object.entries(grouped).map(([k, v]) => `• ${k}: ${v.count} نقلة | الكمية الإجمالية: ${fmtNum(v.qty)} | القيمة: ${fmtSyp(v.revSyp)}`).join('\n')
+        : '• لا توجد نقلات مسجّلة حتى الآن';
+
+      const remainOnOwner = m.liftRevSyp - m.depositsSyp;
+      const text = `كشف حساب نهائي لصاحب المحضر — رافعة برو
+المحضر: ${site.name}
+صاحب المحضر: ${site.ownerName}
+--------------------------------
+ملخص الأعمال والنقلات:
+${lines}
+--------------------------------
+إجمالي قيمة الأعمال: ${fmtSyp(m.liftRevSyp)} (${fmtUsd(toUsd(m.liftRevSyp, 'SYP'))})
+المقبوض سابقاً: ${fmtSyp(m.depositsSyp)} (${fmtUsd(toUsd(m.depositsSyp, 'SYP'))})
+الرصيد النهائي المستحق: ${fmtSyp(remainOnOwner)} (${fmtUsd(toUsd(remainOnOwner, 'SYP'))})
+سعر الصرف المعتمد: 1$ = ${fmtNum(cloudData.exchangeRate)} ل.س`;
+
+      openModal(`كشف حساب صاحب المحضر — ${site.ownerName}`, `
+        <p class="text-xs text-slate-500">كشف نظيف ومختصر للعميل يحتوي فقط على النقلات وحسابه النهائي (بدون أي مصاريف داخلية أو أجور عمال):</p>
+        <textarea rows="10" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold leading-relaxed">${text}</textarea>
+        <button id="btnCopyOwnerStmt" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold py-2.5 rounded-xl">نسخ الكشف لإرساله لصاحب المحضر</button>
+      `);
+      document.getElementById('btnCopyOwnerStmt').addEventListener('click', () => {
+        copyText(text); showToast('تم نسخ كشف حساب صاحب المحضر');
+      });
+    }
+
+    function openCompleteSiteSummaryModal(site) {
+      const m = calcSiteMetrics(site);
+      if (!site.completed) {
+        site.completed = true;
+        site.completedAt = nowTimeFull();
+        logAudit('إتمام وأرشفة محضر', `${site.name} (صافي الربح: ${fmtSyp(m.netProfitSyp)})`, 'normal');
+        renderAll();
+      }
+      openModal(`ملخص المحضر المنتهي — ${site.name}`, `
+        <div class="space-y-3">
+          <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
+            <div class="text-xs font-extrabold text-emerald-800">تم تسجيل المحضر كـ «خالص / منتهي» ونقله لأسفل القائمة ✓</div>
+            <div class="text-[11px] text-emerald-700 mt-0.5">المستلم: ${site.supervisor} • صاحب المحضر: ${site.ownerName}</div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">عدد النقلات</span><strong class="text-base num">${site.lifts.length}</strong></div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">قيمة النقلات</span><strong class="text-emerald-700 num">${fmtSyp(m.liftRevSyp)}</strong></div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">حصة العمال</span><strong class="text-sky-700 num">${fmtSyp(m.workerEarnedSyp)}</strong></div>
+            <div class="bg-slate-50 p-2.5 rounded-xl border"><span class="text-slate-500 block">المصاريف</span><strong class="text-rose-700 num">${fmtSyp(m.expensesSyp)}</strong></div>
+          </div>
+          <div class="bg-slate-900 text-white rounded-2xl p-3 text-center">
+            <div class="text-xs text-amber-400 font-bold">المحصلة الصافية لهذا المحضر</div>
+            <div class="text-xl font-black mt-0.5 num">${fmtSyp(m.netProfitSyp)}</div>
+            <div class="text-xs text-amber-300 font-bold num">${fmtUsd(toUsd(m.netProfitSyp, 'SYP'))}</div>
+          </div>
+          <div class="flex gap-2">
+            <button id="btnDoneOwnerStmt" class="flex-1 bg-amber-500 text-slate-950 font-extrabold py-2 rounded-xl text-xs">كشف صاحب المحضر</button>
+            <button id="btnReopenSite" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 px-3 rounded-xl text-xs">إعادة فتح المحضر</button>
+          </div>
+        </div>
+      `);
+      document.getElementById('btnDoneOwnerStmt').addEventListener('click', () => { closeModal(); openOwnerStatementModal(site); });
+      document.getElementById('btnReopenSite').addEventListener('click', () => {
+        site.completed = false;
+        logAudit('إعادة فتح محضر', site.name, 'edit');
+        closeModal(); renderAll(); showToast('تمت إعادة فتح المحضر');
+      });
+    }
+
+    function openDeleteSiteConfirm(site) {
+      if (cloudData.sites.length <= 1) {
+        showToast('لا يمكن حذف آخر محضر موجود');
+        return;
+      }
+      openModal(`حذف محضر: ${site.name}`, `
+        <div class="space-y-3 text-center">
+          <p class="text-sm font-bold text-slate-800">هل أنت متأكد من حذف «${site.name}» بكل سجلاته نهائياً؟</p>
+          <div class="flex gap-2">
+            <button id="btnConfirmDelSite" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف المحضر</button>
+            <button id="btnCancelDelSite" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button>
+          </div>
+        </div>
+      `);
+      document.getElementById('btnConfirmDelSite').addEventListener('click', () => {
+        cloudData.sites = cloudData.sites.filter(x => x.id !== site.id);
+        ui.activeSiteId = cloudData.sites[0].id;
+        logAudit('حذف محضر نهائياً', site.name, 'delete');
+        closeModal(); renderAll(); showToast(`تم حذف ${site.name}`);
+      });
+      document.getElementById('btnCancelDelSite').addEventListener('click', closeModal);
+    }
+
+    // Protected Payment Ledger Modal (Delete accidental entry only!)
+    function openLedgerModal() {
+      const site = getActiveSite();
+      const entries = [
+        ...site.deposits.map(d => ({ id: d.id, kind: 'dep', type: 'in', title: d.note, amount: d.amount, currency: d.currency, time: d.time })),
+        ...site.expenses.map(e => ({ id: e.id, kind: 'exp', type: 'out', title: `${e.itemName} (${e.categoryName})`, amount: e.amount, currency: e.currency, time: e.time }))
+      ];
+      openModal(`سجل الدفع والعهدة المحمي — ${site.name}`, `
+        <p class="text-[11px] text-slate-500">سجل الدفع محمي ضد التعديل العشوائي؛ يمكنك فقط حذف فاتورة أو دفعة مسجّلة بالخطأ.</p>
+        <div class="space-y-2">
+          ${entries.length === 0 ? '<div class="text-center text-slate-400 py-4 text-xs">لا توجد حركات مالية بعد</div>' :
+            entries.map(en => `
+              <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl border ${en.type === 'in' ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}">
+                <div>
+                  <div class="font-extrabold text-xs text-slate-900">${en.title}</div>
+                  <div class="text-[11px] text-slate-500 num">${en.time}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="font-black text-xs num ${en.type === 'in' ? 'text-emerald-700' : 'text-rose-700'}">
+                    ${en.type === 'in' ? '+' : '-'}${fmtCurr(en.amount, en.currency)}
+                  </div>
+                  <button data-ledger-del="${en.id}" data-ledger-kind="${en.kind}" class="ledger-del-btn p-1.5 rounded-lg bg-white border border-slate-200 text-rose-600 hover:bg-rose-100" title="حذف فاتورة خاطئة">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>
+      `);
+    }
+
+    // =========================================================================
+    // 7. LIFTS, PRESETS, EXPENSES, WORKERS, TOUR & OTHER MODALS
+    // =========================================================================
+    function handleQuickLiftTap(presetId) {
+      const site = getActiveSite();
+      const preset = site.presets.find(p => p.id === presetId);
+      if (!preset) return;
+      const nowMs = Date.now();
+      const diffSec = Math.floor((nowMs - (ui.lastLiftTimestamp || 0)) / 1000);
+      if (ui.lastLiftTimestamp > 0 && diffSec < 15) {
+        openModal('تنبيه لمنع الكبس المزدوج', `
+          <div class="space-y-3 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto"><i data-lucide="alert-triangle" class="w-6 h-6"></i></div>
+            <p class="font-bold text-slate-800">تم تسجيل نقلة قبل <span class="num text-amber-600 font-black">${diffSec}</span> ثوانٍ فقط!</p>
+            <p class="text-xs text-slate-500">هل أنت متأكد أنك تريد تسجيل نقلة جديدة (${preset.label})؟</p>
+            <div class="flex gap-2 pt-2">
+              <button id="btnConfirmRapidLift" class="flex-1 bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">نعم، سجّل النقلة</button>
+              <button id="btnCancelRapidLift" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button>
+            </div>
+          </div>
+        `);
+        document.getElementById('btnConfirmRapidLift').addEventListener('click', () => { closeModal(); commitQuickLift(preset, true, diffSec); });
+        document.getElementById('btnCancelRapidLift').addEventListener('click', closeModal);
+        return;
+      }
+      commitQuickLift(preset, false, diffSec);
+    }
+
+    function commitQuickLift(preset, isRapidConfirmed, diffSec) {
+      const site = getActiveSite();
+      ui.lastLiftTimestamp = Date.now();
+      const lift = { id: uid('l'), material: preset.label, qty: preset.qty, unit: preset.unit, price: preset.price, currency: preset.currency, direction: preset.direction, time: nowTimeFull() };
+      site.lifts.push(lift);
+      logAudit(isRapidConfirmed ? 'نقلة متتالية (بعد التأكيد)' : 'تسجيل نقلة', `${lift.material} (${lift.qty} ${lift.unit})${isRapidConfirmed ? ` — بعد ${diffSec} ثانية` : ''}`, isRapidConfirmed ? 'rapid' : 'normal');
+      renderAll();
+      showToast(`تم تسجيل نقلة ${lift.material} (${lift.qty} ${lift.unit})`, () => {
+        site.lifts = site.lifts.filter(x => x.id !== lift.id);
+        logAudit('تراجع عن نقلة', `${lift.material}`, 'delete');
+        renderAll();
+      });
+    }
+
+    function openEditPresetsModal() {
+      const isAdmin = ui.role === 'admin';
+      const site = getActiveSite();
+      openModal('تخصيص الأزرار الـ 6 السريعة', `
+        <form id="presetsForm" class="space-y-3">
+          ${site.presets.map((p, i) => `
+            <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">${p.icon}</span>
+                <input name="label_${i}" value="${p.label}" required class="flex-1 bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-extrabold" />
+                <input name="qty_${i}" type="number" step="any" value="${p.qty}" required class="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs font-extrabold num" />
+                <select name="unit_${i}" class="bg-white border border-slate-300 rounded-lg px-1.5 py-1.5 text-xs font-bold">
+                  ${['بلوكة', 'لتر مكعب', 'متر مكعب', 'كيس', 'نقلة'].map(u => `<option value="${u}" ${p.unit === u ? 'selected' : ''}>${u}</option>`).join('')}
+                </select>
+              </div>
+              ${isAdmin ? `
+                <div class="flex items-center gap-2 pr-7">
+                  <span class="text-[11px] text-slate-500 font-bold">السعر:</span>
+                  <input name="price_${i}" type="number" step="any" value="${p.price}" required class="flex-1 bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs font-extrabold num" />
+                  <select name="cur_${i}" class="bg-white border border-slate-300 rounded-lg px-1.5 py-1 text-xs font-bold">
+                    <option value="SYP" ${p.currency === 'SYP' ? 'selected' : ''}>ل.س</option>
+                    <option value="USD" ${p.currency === 'USD' ? 'selected' : ''}>$</option>
+                  </select>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ الأزرار</button>
+        </form>
+      `);
+      document.getElementById('presetsForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        site.presets.forEach((p, i) => {
+          p.label = fd.get(`label_${i}`);
+          p.qty = Number(fd.get(`qty_${i}`)) || 1;
+          p.unit = fd.get(`unit_${i}`);
+          if (isAdmin) { p.price = Number(fd.get(`price_${i}`)) || 0; p.currency = fd.get(`cur_${i}`); }
+        });
+        logAudit('تخصيص الأزرار الـ 6', site.name, 'edit');
+        closeModal(); renderAll(); showToast('تم حفظ الأزرار المخصصة');
+      });
+    }
+
+    function openLiftModal(existingLift = null) {
+      const isAdmin = ui.role === 'admin';
+      const l = existingLift || { material: 'بلوك 15', qty: 45, unit: 'بلوكة', price: 35000, currency: 'SYP', direction: 'تطليع' };
+      openModal(existingLift ? 'تعديل النقلة' : 'تسجيل نقلة مخصصة', `
+        <form id="liftForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم الصنف</label><input name="material" required value="${l.material}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">الكمية</label><input name="qty" type="number" step="any" required value="${l.qty}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">الوحدة</label><select name="unit" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold">${['بلوكة', 'لتر مكعب', 'متر مكعب', 'كيس', 'نقلة'].map(u => `<option value="${u}" ${l.unit === u ? 'selected' : ''}>${u}</option>`).join('')}</select></div>
+          </div>
+          ${isAdmin ? `
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="block text-xs font-bold text-slate-600 mb-1">سعر النقلة (خاص بالمدير)</label><input name="price" type="number" step="any" required value="${l.price}" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div>
+              <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP" ${l.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${l.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div>
+            </div>
+          ` : ''}
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">الاتجاه</label><select name="direction" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="تطليع" ${l.direction === 'تطليع' ? 'selected' : ''}>تطليع ⬆️</option><option value="تنزيل" ${l.direction === 'تنزيل' ? 'selected' : ''}>تنزيل ⬇️</option></select></div>
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">${existingLift ? 'حفظ التعديل' : 'تسجيل النقلة'}</button>
+        </form>
+      `);
+      document.getElementById('liftForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const site = getActiveSite();
+        if (existingLift) {
+          const oldDesc = `${existingLift.material} (${existingLift.qty})`;
+          existingLift.material = fd.get('material');
+          existingLift.qty = Number(fd.get('qty'));
+          existingLift.unit = fd.get('unit');
+          if (isAdmin) { existingLift.price = Number(fd.get('price')); existingLift.currency = fd.get('currency'); }
+          existingLift.direction = fd.get('direction');
+          logAudit('تعديل نقلة', `${oldDesc} ← ${existingLift.material} (${existingLift.qty})`, 'edit');
+        } else {
+          const mp = site.presets.find(p => p.label === fd.get('material')) || site.presets[0];
+          site.lifts.push({
+            id: uid('l'), material: fd.get('material'), qty: Number(fd.get('qty')), unit: fd.get('unit'),
+            price: isAdmin ? Number(fd.get('price')) : (mp ? mp.price : 35000),
+            currency: isAdmin ? fd.get('currency') : (mp ? mp.currency : 'SYP'),
+            direction: fd.get('direction'), time: nowTimeFull()
+          });
+          logAudit('تسجيل نقلة مخصصة', `${fd.get('material')} (${fd.get('qty')})`, 'normal');
+        }
+        closeModal(); renderAll(); showToast('تم الحفظ');
+      });
+    }
+
+    function openQuickExpenseModal(catId, itemName) {
+      const site = getActiveSite();
+      const cat = site.categories.find(c => c.id === catId);
+      if (!cat) return;
+      openModal(`تسجيل مصروف: ${itemName}`, `
+        <form id="qExpForm" class="space-y-3">
+          <div class="text-xs text-slate-500">التصنيف: <strong>${cat.icon} ${cat.name}</strong></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ المدفوع</label><input name="amount" type="number" step="any" required autofocus placeholder="مثال: 65000" class="w-full border-2 border-rose-300 rounded-xl px-3 py-2.5 text-base font-black num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2.5 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
+          </div>
+          <button type="submit" class="w-full bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">حفظ المصروف</button>
+        </form>
+      `);
+      document.getElementById('qExpForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const amount = Number(fd.get('amount')) || 0;
+        const currency = fd.get('currency');
+        const exp = { id: uid('ex'), categoryId: cat.id, categoryName: cat.name, itemName, amount, currency, time: nowTimeFull() };
+        site.expenses.push(exp);
+        logAudit('تسجيل مصروف', `${itemName} (${cat.name}) — ${fmtCurr(amount, currency)}`, 'normal');
+        closeModal(); renderAll();
+        showToast(`تم تسجيل ${itemName} (${fmtCurr(amount, currency)})`);
+      });
+    }
+
+    function openAuditLogModal() {
+      openModal('السجل الأمني الصامت (للمدير فقط)', `
+        <div class="space-y-2">
+          ${cloudData.auditLog.length === 0 ? '<div class="text-center py-6 text-slate-400 text-xs">السجل فارغ حالياً</div>' :
+            cloudData.auditLog.map(a => {
+              const cls = a.flag === 'rapid' ? 'bg-amber-100 text-amber-800 border-amber-300' : a.flag === 'edit' ? 'bg-sky-50 text-sky-800 border-sky-200' : a.flag === 'delete' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-slate-50 text-slate-800 border-slate-200';
+              return `<div class="p-2.5 rounded-xl border ${cls} space-y-1"><div class="flex items-center justify-between text-[11px] font-extrabold"><span>${a.action}</span><span class="num">${a.time}</span></div><div class="text-xs font-bold">${a.details}</div><div class="text-[10px] opacity-75">${a.actor} • ${a.siteName}</div></div>`;
+            }).join('')
+          }
+        </div>
+      `);
+    }
+
+    function openDepositModal() {
+      openModal('إضافة دفعة مقبوضة (عهدة)', `
+        <form id="depForm" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required placeholder="مثال: 2000000" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
+          </div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">ملاحظة</label><input name="note" value="دفعة من صاحب المحضر" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">إضافة للصندوق</button>
+        </form>
+      `);
+      document.getElementById('depForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const amt = Number(fd.get('amount')) || 0;
+        const cur = fd.get('currency');
+        getActiveSite().deposits.push({ id: uid('dep'), amount: amt, currency: cur, note: fd.get('note'), time: nowTimeFull() });
+        logAudit('إضافة مقبوض', `${fmtCurr(amt, cur)} — ${fd.get('note')}`, 'normal');
+        closeModal(); renderAll(); showToast('تمت إضافة المقبوض');
+      });
+    }
+
+    function openAddCategoryModal() {
+      openModal('إنشاء تصنيف مصاريف جديد', `
+        <form id="catForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم التصنيف</label><input name="name" required placeholder="مثال: مواصلات، ضيافة" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">أيقونة</label><select name="icon" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="🥙">🥙 أكل وغدا</option><option value="⚡">⚡ مولدة ووقود</option><option value="🔧">🔧 صيانة وأدوات</option><option value="🚚">🚚 مواصلات</option><option value="📦">📦 عام</option></select></div>
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">إنشاء التصنيف</button>
+        </form>
+      `);
+      document.getElementById('catForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const newCat = { id: uid('cat'), name: fd.get('name'), icon: fd.get('icon'), items: ['مصروف عام'] };
+        getActiveSite().categories.push(newCat);
+        ui.activeFolderId = newCat.id;
+        closeModal(); renderAll(); showToast('تم إنشاء التصنيف');
+      });
+    }
+
+    function openAddCatItemModal(catId) {
+      openModal('إضافة بند سريع داخل التصنيف', `
+        <form id="catItemForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم البند</label><input name="name" required placeholder="مثال: فلافل، شاورما، بنزين" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <button type="submit" class="w-full bg-slate-900 text-amber-400 font-extrabold py-2.5 rounded-xl">إضافة البند</button>
+        </form>
+      `);
+      document.getElementById('catItemForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const cat = getActiveSite().categories.find(c => c.id === catId);
+        if (cat) cat.items.push(new FormData(e.target).get('name'));
+        closeModal(); renderAll(); showToast('تمت إضافة البند');
+      });
+    }
+
+    function openWorkerModal(existingWorker = null) {
+      const isAdmin = ui.role === 'admin';
+      const w = existingWorker || { name: '', payType: 'percent', payValue: 15, currency: 'SYP', daysWorked: 1 };
+      openModal(existingWorker ? `تعديل: ${w.name}` : 'إضافة عامل جديد', `
+        <form id="workerForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم العامل</label><input name="name" required value="${w.name}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          ${isAdmin ? `
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">طريقة الحساب</label><select name="payType" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="percent" ${w.payType === 'percent' ? 'selected' : ''}>نسبة مئوية (%) من النقلات</option><option value="fixed_day" ${w.payType === 'fixed_day' ? 'selected' : ''}>أجر ثابت يومي</option><option value="fixed_lift" ${w.payType === 'fixed_lift' ? 'selected' : ''}>أجر ثابت لكل نقلة</option></select></div>
+            <div class="grid grid-cols-2 gap-2">
+              <div><label class="block text-xs font-bold text-slate-600 mb-1">القيمة (% أو مبلغ)</label><input name="payValue" type="number" step="any" required value="${w.payValue}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+              <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP" ${w.currency === 'SYP' ? 'selected' : ''}>ليرة سورية</option><option value="USD" ${w.currency === 'USD' ? 'selected' : ''}>دولار ($)</option></select></div>
+            </div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">أيام العمل</label><input name="daysWorked" type="number" min="0" required value="${w.daysWorked}" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+          ` : ''}
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">حفظ</button>
+        </form>
+      `);
+      document.getElementById('workerForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const site = getActiveSite();
+        if (existingWorker) {
+          existingWorker.name = fd.get('name');
+          if (isAdmin) { existingWorker.payType = fd.get('payType'); existingWorker.payValue = Number(fd.get('payValue')); existingWorker.currency = fd.get('currency'); existingWorker.daysWorked = Number(fd.get('daysWorked')); }
+        } else {
+          site.workers.push({ id: uid('w'), name: fd.get('name'), isSupervisor: false, present: true, payType: isAdmin ? fd.get('payType') : 'percent', payValue: isAdmin ? Number(fd.get('payValue')) : 15, currency: isAdmin ? fd.get('currency') : 'SYP', daysWorked: isAdmin ? Number(fd.get('daysWorked')) : 1, paidSyp: 0, paidUsd: 0 });
+        }
+        closeModal(); renderAll(); showToast('تم الحفظ');
+      });
+    }
+
+    function openPayWorkerModal(worker) {
+      openModal(`تسجيل دفعة / قبض — ${worker.name}`, `
+        <form id="payWForm" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">المبلغ</label><input name="amount" type="number" step="any" required class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold num" /></div>
+            <div><label class="block text-xs font-bold text-slate-600 mb-1">العملة</label><select name="currency" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold"><option value="SYP">ليرة سورية</option><option value="USD">دولار ($)</option></select></div>
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 text-white font-extrabold py-2.5 rounded-xl">تأكيد الدفعة</button>
+        </form>
+      `);
+      document.getElementById('payWForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const amt = Number(fd.get('amount')) || 0;
+        const cur = fd.get('currency');
+        if (cur === 'USD') worker.paidUsd = (worker.paidUsd || 0) + amt;
+        else worker.paidSyp = (worker.paidSyp || 0) + amt;
+        logAudit('تسجيل دفعة لعامل/مراقب', `${worker.name} — ${fmtCurr(amt, cur)}`, 'normal');
+        closeModal(); renderAll(); showToast('تم تسجيل الدفعة');
+      });
+    }
+
+    function openWorkerStatement(worker) {
+      const site = getActiveSite();
+      const earnedSyp = calcWorkerEarnedSyp(worker, site);
+      const paidSyp = (Number(worker.paidSyp) || 0) + toSyp(worker.paidUsd || 0, 'USD');
+      const remainSyp = earnedSyp - paidSyp;
+      const text = `كشف حساب — رافعة برو\nالاسم: ${worker.name}\nالمحضر: ${site.name}\nأيام العمل: ${worker.daysWorked}\nالمستحق: ${fmtSyp(earnedSyp)} (${fmtUsd(toUsd(earnedSyp, 'SYP'))})\nالمدفوع له: ${fmtSyp(paidSyp)}\nالمتبقي له: ${fmtSyp(remainSyp)} (${fmtUsd(toUsd(remainSyp, 'SYP'))})`;
+      openModal('كشف حساب جاهز للمشاركة', `
+        <textarea rows="8" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold">${text}</textarea>
+        <button id="btnCopyStmt" class="w-full bg-sky-600 text-white font-extrabold py-2.5 rounded-xl">نسخ لإرساله على تلغرام / واتساب</button>
+      `);
+      document.getElementById('btnCopyStmt').addEventListener('click', () => { copyText(text); showToast('تم النسخ'); });
+    }
+
+    function openAddSiteModal() {
+      openModal('إضافة محضر ومراقب جديد', `
+        <form id="siteForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المحضر</label><input name="name" required placeholder="مثال: محضر المزة 2" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم المراقب المستلم</label><input name="supervisor" required placeholder="مثال: أبو سامر" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">رقم Telegram ID للمراقب (اختياري الآن)</label><input name="supervisorTgId" placeholder="مثال: 5123456789" class="w-full border border-amber-400 rounded-xl px-3 py-2 font-bold num" /></div>
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">اسم صاحب المحضر</label><input name="ownerName" required placeholder="اسم المتعهد أو صاحب البناء" class="w-full border border-slate-300 rounded-xl px-3 py-2 font-bold" /></div>
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">إنشاء المحضر</button>
+        </form>
+      `);
+      document.getElementById('siteForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const ns = makeDefaultSite(uid('site'), fd.get('name'), fd.get('supervisor'), fd.get('ownerName'), fd.get('supervisorTgId'));
+        cloudData.sites.push(ns);
+        ui.activeSiteId = ns.id;
+        logAudit('إنشاء محضر جديد', `${ns.name} | المستلم: ${ns.supervisor} | الصاحب: ${ns.ownerName}`, 'normal');
+        closeModal(); renderAll(); showToast(`تمت إضافة ${ns.name}`);
+      });
+    }
+
+    function openDailyReportModal() {
+      const lines = cloudData.sites.map(s => {
+        const m = calcSiteMetrics(s);
+        return `• ${s.name} (${s.supervisor})${s.completed ? ' [خالص]' : ''}: ${s.lifts.length} نقلة | النقلات ${fmtSyp(m.liftRevSyp)} | المصاريف ${fmtSyp(m.expensesSyp)} | صافي ${fmtSyp(m.netProfitSyp)}`;
+      }).join('\n');
+      const report = `التقرير اليومي — رافعة برو\nسعر الصرف: 1$ = ${fmtNum(cloudData.exchangeRate)} ل.س\n----------------\n${lines}`;
+      openModal('تقرير نهاية اليوم لتلغرام', `
+        <textarea rows="8" readonly class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-bold">${report}</textarea>
+        <button id="btnCopyReport" class="w-full bg-sky-600 text-white font-extrabold py-2.5 rounded-xl">نسخ التقرير اليومي</button>
+      `);
+      document.getElementById('btnCopyReport').addEventListener('click', () => { copyText(report); showToast('تم نسخ التقرير'); });
+    }
+
+    function openRateModal() {
+      openModal('تعديل سعر صرف الدولار', `
+        <form id="rateForm" class="space-y-3">
+          <div><label class="block text-xs font-bold text-slate-600 mb-1">كم ليرة سورية مقابل 1 دولار؟</label><input name="rate" type="number" min="100" step="100" required value="${cloudData.exchangeRate}" class="w-full border border-amber-400 rounded-xl px-3 py-2.5 text-lg font-black num" /></div>
+          <button type="submit" class="w-full bg-amber-500 text-slate-950 font-extrabold py-2.5 rounded-xl">تحديث السعر</button>
+        </form>
+      `);
+      document.getElementById('rateForm').addEventListener('submit', e => {
+        e.preventDefault();
+        cloudData.exchangeRate = Number(new FormData(e.target).get('rate')) || 14500;
+        closeModal(); renderAll(); showToast('تم تحديث سعر الصرف');
+      });
+    }
+
+    // Guided Tour
+    const TOUR_STEPS = [
+      { tab: 'lifts', elId: 'quickLiftCard', title: '1. النقلات وتخصيص الأزرار الـ 6', desc: 'اضغط أي صنف للتسجيل الفوري، واضغط «تعديل الأزرار» لتخصيص الأصناف الـ 6. مع تنبيه تلقائي لمنع الكبس المزدوج خلال 15 ثانية.' },
+      { tab: 'expenses', elId: 'expensesCard', title: '2. المصاريف المبسّطة', desc: 'اختر التصنيف بالأعلى ثم اضغط اسم البند وأدخل المبلغ، فيصل فوراً للمدير ويُخصم من العهدة.' },
+      { tab: 'workers', elId: 'workersCard', title: '3. العمال وحساب المراقب', desc: 'المراقب يعلّم الحضور فقط، بينما المدير يتابع حساب العمال والمراقب معاً (نسبة % أو أجر ثابت) وكشوفات الحساب.' },
+      { tab: 'lifts', elId: 'pettyCashCard', title: '4. كشف صاحب المحضر وسجل الدفع المحمي', desc: 'من الأعلى يمكنك تعديل بيانات المحضر، إصدار كشف حساب نظيف لصاحب المحضر، ومراجعة سجل الدفع المحمي.' },
+      { tab: 'summary', elId: 'adminSummaryView', title: '5. البحث وإتمام المحاضر والمحصلة', desc: 'أنهِ أي محضر بضغطة زر ليُعرض ملخصه وينتقل لأسفل القائمة، واستخدم زر البحث والسجل الأمني بالأعلى بأي وقت.' }
+    ];
+
+    function showTourStep(idx) {
+      document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+      if (idx < 0 || idx >= TOUR_STEPS.length) { ui.tourIndex = -1; document.getElementById('tourBanner').classList.add('hidden'); return; }
+      ui.tourIndex = idx;
+      const step = TOUR_STEPS[idx];
+      ui.activeTab = step.tab;
+      renderAll(false);
+      const t = document.getElementById(step.elId);
+      if (t && !t.classList.contains('hidden')) { t.classList.add('tour-highlight'); t.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      document.getElementById('tourStepBadge').textContent = `${idx + 1} / ${TOUR_STEPS.length}`;
+      document.getElementById('tourTitle').textContent = step.title;
+      document.getElementById('tourDesc').textContent = step.desc;
+      document.getElementById('btnTourNext').textContent = idx === TOUR_STEPS.length - 1 ? 'إنهاء الجولة' : 'التالي';
+      document.getElementById('tourBanner').classList.remove('hidden');
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      else fallbackCopy(text);
+    }
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    // =========================================================================
+    // 8. LISTENERS & BOOT
+    // =========================================================================
+    document.getElementById('btnCopyUnknownId').addEventListener('click', () => {
+      if (tgUser) { copyText(String(tgUser.id)); showToast('تم نسخ رقم المعرّف'); }
+    });
+    document.getElementById('btnRoleAdmin').addEventListener('click', () => { ui.role = 'admin'; renderAll(false); });
+    document.getElementById('btnRoleSup').addEventListener('click', () => { ui.role = 'supervisor'; ui.assignedSiteId = ui.activeSiteId; ui.activeTab = 'lifts'; renderAll(false); });
+    document.getElementById('btnStartTour').addEventListener('click', () => showTourStep(0));
+    document.getElementById('btnTourClose').addEventListener('click', () => showTourStep(-1));
+    document.getElementById('btnTourPrev').addEventListener('click', () => { if (ui.tourIndex > 0) showTourStep(ui.tourIndex - 1); });
+    document.getElementById('btnTourNext').addEventListener('click', () => { if (ui.tourIndex < TOUR_STEPS.length - 1) showTourStep(ui.tourIndex + 1); else showTourStep(-1); });
+
+    document.getElementById('btnOpenSearch').addEventListener('click', openAdminSearchModal);
+    document.getElementById('btnOpenAuditLog').addEventListener('click', openAuditLogModal);
+    document.getElementById('btnOpenRateModal').addEventListener('click', openRateModal);
+    document.getElementById('btnEditSiteMeta').addEventListener('click', openEditSiteMetaModal);
+    document.getElementById('btnOwnerStatement').addEventListener('click', () => openOwnerStatementModal(null));
+    document.getElementById('btnAddDeposit').addEventListener('click', openDepositModal);
+    document.getElementById('btnViewLedger').addEventListener('click', openLedgerModal);
+    document.getElementById('btnEditPresets').addEventListener('click', openEditPresetsModal);
+    document.getElementById('btnCustomLift').addEventListener('click', () => openLiftModal(null));
+    document.getElementById('btnAddCategory').addEventListener('click', openAddCategoryModal);
+    document.getElementById('btnAddWorker').addEventListener('click', () => openWorkerModal(null));
+    document.getElementById('btnAddSite').addEventListener('click', openAddSiteModal);
+    document.getElementById('btnDailyReport').addEventListener('click', openDailyReportModal);
+    document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+    document.getElementById('appModal').addEventListener('click', e => { if (e.target.id === 'appModal') closeModal(); });
+    document.getElementById('toastUndoBtn').addEventListener('click', () => { if (typeof undoAction === 'function') undoAction(); });
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => { ui.activeTab = btn.dataset.tab; renderAll(false); });
+    });
+    document.getElementById('summarySiteFilter').addEventListener('change', e => { ui.summarySiteFilter = e.target.value; renderAll(false); });
+    document.getElementById('summaryScopeFilter').addEventListener('change', e => { ui.summaryScopeFilter = e.target.value; renderAll(false); });
+    document.getElementById('summaryRateInput').addEventListener('input', e => {
+      const v = Number(e.target.value);
+      if (v >= 100) { cloudData.exchangeRate = v; renderAll(true); }
+    });
+
+    document.addEventListener('click', e => {
+      const sitePill = e.target.closest('.site-pill');
+      if (sitePill) { ui.activeSiteId = sitePill.dataset.siteId; renderAll(false); return; }
+
+      const jumpSite = e.target.closest('.jump-site-btn');
+      if (jumpSite) { ui.activeSiteId = jumpSite.dataset.jumpSite; ui.activeTab = 'lifts'; renderAll(false); showToast(`تم فتح ${getActiveSite().name}`); return; }
+
+      const compSite = e.target.closest('.complete-site-btn');
+      if (compSite) { const s = cloudData.sites.find(x => x.id === compSite.dataset.completeSite); if (s) openCompleteSiteSummaryModal(s); return; }
+
+      const delSite = e.target.closest('.delete-site-btn');
+      if (delSite) { const s = cloudData.sites.find(x => x.id === delSite.dataset.deleteSite); if (s) openDeleteSiteConfirm(s); return; }
+
+      const qLift = e.target.closest('.quick-lift-btn');
+      if (qLift) { handleQuickLiftTap(qLift.dataset.presetId); return; }
+
+      const editLift = e.target.closest('.edit-lift-btn');
+      if (editLift) { const l = getActiveSite().lifts.find(x => x.id === editLift.dataset.editLift); if (l) openLiftModal(l); return; }
+
+      const delLift = e.target.closest('.del-lift-btn');
+      if (delLift) {
+        const site = getActiveSite();
+        const rem = site.lifts.find(x => x.id === delLift.dataset.delLift);
+        site.lifts = site.lifts.filter(x => x.id !== delLift.dataset.delLift);
+        if (rem) logAudit('حذف نقلة', `${rem.material} (${rem.qty})`, 'delete');
+        renderAll();
+        if (rem) showToast('تم حذف النقلة', () => { site.lifts.push(rem); renderAll(); });
+        return;
+      }
+
+      const folderBtn = e.target.closest('.folder-btn');
+      if (folderBtn) { ui.activeFolderId = folderBtn.dataset.folderId; renderAll(false); return; }
+
+      const addCatItemBtn = e.target.closest('.add-cat-item-btn');
+      if (addCatItemBtn) { openAddCatItemModal(addCatItemBtn.dataset.addItemCat); return; }
+
+      const pickChip = e.target.closest('.pick-exp-chip');
+      if (pickChip) { openQuickExpenseModal(pickChip.dataset.pickCat, pickChip.dataset.pickItem); return; }
+
+      const delExp = e.target.closest('.del-exp-btn');
+      if (delExp) {
+        const site = getActiveSite();
+        const rem = site.expenses.find(x => x.id === delExp.dataset.delExp);
+        if (!rem) return;
+        openModal('حذف فاتورة مصروف', `
+          <div class="space-y-3 text-center">
+            <p class="font-bold text-slate-800">هل تريد حذف «${rem.itemName}» (${fmtCurr(rem.amount, rem.currency)})؟</p>
+            <div class="flex gap-2">
+              <button id="btnYesDelExp" class="flex-1 bg-rose-600 text-white font-extrabold py-2.5 rounded-xl">نعم، احذف</button>
+              <button id="btnNoDelExp" class="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl">إلغاء</button>
+            </div>
+          </div>
+        `);
+        document.getElementById('btnYesDelExp').addEventListener('click', () => {
+          site.expenses = site.expenses.filter(x => x.id !== rem.id);
+          logAudit('حذف فاتورة مصروف', `${rem.itemName} (${fmtCurr(rem.amount, rem.currency)})`, 'delete');
+          closeModal(); renderAll(); showToast('تم حذف المصروف');
+        });
+        document.getElementById('btnNoDelExp').addEventListener('click', closeModal);
+        return;
+      }
+
+      const ledgerDel = e.target.closest('.ledger-del-btn');
+      if (ledgerDel) {
+        const site = getActiveSite();
+        const id = ledgerDel.dataset.ledgerDel;
+        const kind = ledgerDel.dataset.ledgerKind;
+        if (kind === 'dep') {
+          const d = site.deposits.find(x => x.id === id);
+          site.deposits = site.deposits.filter(x => x.id !== id);
+          if (d) logAudit('حذف دفعة مقبوضة من السجل', `${d.note} (${fmtCurr(d.amount, d.currency)})`, 'delete');
+        } else {
+          const ex = site.expenses.find(x => x.id === id);
+          site.expenses = site.expenses.filter(x => x.id !== id);
+          if (ex) logAudit('حذف فاتورة من السجل', `${ex.itemName} (${fmtCurr(ex.amount, ex.currency)})`, 'delete');
+        }
+        renderAll();
+        openLedgerModal();
+        showToast('تم الحذف من السجل المحمي');
+        return;
+      }
+
+      const togPres = e.target.closest('.toggle-present-btn');
+      if (togPres) { const w = getActiveSite().workers.find(x => x.id === togPres.dataset.togglePresent); if (w) { w.present = !w.present; renderAll(); } return; }
+
+      const payW = e.target.closest('.pay-worker-btn');
+      if (payW) { const w = getActiveSite().workers.find(x => x.id === payW.dataset.payWorker); if (w) openPayWorkerModal(w); return; }
+
+      const editW = e.target.closest('.edit-worker-btn');
+      if (editW) { const w = getActiveSite().workers.find(x => x.id === editW.dataset.editWorker); if (w) openWorkerModal(w); return; }
+
+      const stmtW = e.target.closest('.stmt-worker-btn');
+      if (stmtW) { const w = getActiveSite().workers.find(x => x.id === stmtW.dataset.stmtWorker); if (w) openWorkerStatement(w); return; }
+    });
+
+    resolveUserRole();
+    renderAll(false);
+  </script>
+</body>
+</html>
